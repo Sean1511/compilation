@@ -1547,13 +1547,13 @@ yyreduce:
 
   case 44:
 #line 113 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("ARGS", (yyvsp[-1]), NULL, NULL, NULL);printf("sean");}
+    {(yyval) = mknode("ARGS", (yyvsp[-1]), NULL, NULL, NULL);}
 #line 1552 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
 #line 114 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("ARGS", (yyvsp[-1]), NULL, NULL, NULL);printf("orita");}
+    {(yyval) = mknode("ARGS", (yyvsp[-1]), NULL, NULL, NULL);}
 #line 1558 "y.tab.c" /* yacc.c:1646  */
     break;
 

@@ -110,8 +110,8 @@ code_block:
     ;
 
 args:
-    params_decleration args {$$ = mknode("ARGS", $1, NULL, NULL, NULL);printf("sean");}
-    |params_decleration SEMICOLON {$$ = mknode("ARGS", $1, NULL, NULL, NULL);printf("orita");}
+    params_decleration args {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
+    |params_decleration SEMICOLON {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
     | %empty {$$ = mknode("ARGS NONE", NULL, NULL, NULL, NULL);}
     ;
 
