@@ -41,16 +41,16 @@ function:
     ;
 
 void_func: 
-    FUNCTION type id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
+    FUNCTION function_type id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
     ; 
 
 value_func: 
-    FUNCTION type id LEFTPAREN args RIGHTPAREN value_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
+    FUNCTION function_type id LEFTPAREN args RIGHTPAREN value_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
     ;
 
  void_block:
-    LEFTBRACE RIGHTBRACE {$$ = mknode ("BLOCK",NULL ,NULL, NULL, NULL);}
-    |LEFTBRACE statments RIGHTBRACE {$$ = mknode ("BLOCK",$2 ,NULL, NULL, NULL);}
+    LEFTBRACE RIGHTBRACE {$$ = mknode ("BODY",NULL ,NULL, NULL, NULL);}
+    |LEFTBRACE statments RIGHTBRACE {$$ = mknode ("BODY",$2 ,NULL, NULL, NULL);}
     ;
     
 value_block: %empty
@@ -91,10 +91,18 @@ id:
     ;
 
 type:
-    VOID
-    |INT
+    VOID {$$ = "void";}
+    |INT {$$ = "int";}
     |REAL
     |CHAR
+    ;
+
+function_type:
+    VOID {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
+    |INT {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
+    |REAL {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
+    |CHAR {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
+    ;    
 
 code_block:
     LEFTBRACE RETURN RIGHTBRACE
@@ -102,8 +110,8 @@ code_block:
     ;
 
 args:
-    params_decleration SEMICOLON {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
-    | args params_decleration {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
+    params_decleration args {$$ = mknode("ARGS", $1, NULL, NULL, NULL);printf("sean");}
+    |params_decleration SEMICOLON {$$ = mknode("ARGS", $1, NULL, NULL, NULL);printf("orita");}
     | %empty {$$ = mknode("ARGS NONE", NULL, NULL, NULL, NULL);}
     ;
 
@@ -112,8 +120,8 @@ params_decleration:
     ;
 
 params:
-    ID COMMA params {$$ = mknode($1, $3, NULL, NULL, NULL);}
-    |ID 
+    id COMMA params {$$ = $1;}
+    |id {$$ = $1;}
     ;
 
 %%

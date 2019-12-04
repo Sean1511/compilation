@@ -15,6 +15,14 @@ void printtree (node *tree, int tab){
     if (tree -> left){
         printtree (tree-> left, tab + 1);
     }
+
+    if (tree -> middle_l){
+        printtree (tree-> middle_l, tab + 1);
+    }
+
+    if (tree -> middle_r){
+        printtree (tree-> middle_r, tab + 1);
+    }
           
     if (tree -> right){
         printtree (tree-> right, tab + 1); 
