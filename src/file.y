@@ -24,9 +24,9 @@ s:
 ;
 
 code:
-    functions Main {$$ = mknode ("CODE", $1,NULL, NULL,$2); }
-    | functions {$$ = mknode ("CODE", $1,NULL, NULL ,NULL); }
-    | Main {$$ = mknode ("CODE", $1,NULL, NULL ,NULL); }     
+    functions Main {$$ = mknode ("CODE"); }
+    | functions {$$ = mknode ("CODE"); addNode(&$$, $1); }
+    | Main {$$ = mknode ("CODE"); }     
     ;
 
 Main: %empty
@@ -43,16 +43,16 @@ function:
     ;
 
 void_func: 
-    FUNCTION type id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
+    FUNCTION type id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode ("FUNCTION"); addNode(&$$,$3); addNode(&$$,$5); addNode(&$$, $2); addNode(&$$, $7);}
     ; 
 
 value_func: 
-    FUNCTION type id LEFTPAREN args RIGHTPAREN value_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
+    FUNCTION type id LEFTPAREN args RIGHTPAREN value_block {$$ = mknode ("FUNCTION"); addNode(&$$,$3); addNode(&$$,$5); addNode(&$$, $2); addNode(&$$, $7);}
     ;
 
  void_block:
-    LEFTBRACE RIGHTBRACE {$$ = mknode ("BODY",NULL ,NULL, NULL, NULL);}
-    |LEFTBRACE statments RIGHTBRACE {$$ = mknode ("BODY",$2 ,NULL, NULL, NULL);}
+    LEFTBRACE RIGHTBRACE {$$ = mknode ("BODY"); }
+    |LEFTBRACE statments RIGHTBRACE {$$ = mknode ("BODY"); addNode(&$$,$2);}
     ;
     
 value_block: %empty
@@ -68,51 +68,51 @@ statment:
     ;
 
 stat_assignment:
-    id ASSIGNMENT expression {$$ = mknode("=", $1, NULL, NULL, $3);}
+    id ASSIGNMENT expression {$$ = mknode("="); addNode(&$$,$1); addNode(&$$,$3);}
     ;
 
 expression:
-    expression PLUS expression {$$ = mknode("+", $1, NULL, NULL, $3);}
-    | expression MINUS expression {$$ = mknode("-", $1, NULL, NULL, $3);}
-    | expression MULTI expression {$$ = mknode("*", $1, NULL, NULL, $3);}
-    | expression DIVISION expression {$$ = mknode("/", $1, NULL, NULL, $3);}
-    | expression EQUAL expression  { $$ = mknode ("==", $1, NULL, NULL, $3); }
-    | expression GREATER expression  { $$ = mknode (">", $1, NULL, NULL, $3); }
-    | expression GREATEREQUAL expression { $$ = mknode (">=", $1, NULL, NULL, $3); }
-    | expression LESS expression { $$ = mknode ("<", $1, NULL, NULL, $3); }
-    | expression LESSEQUAL expression { $$ = mknode ("<=", $1, NULL, NULL, $3); }
-    | expression NOTEQUAL expression { $$ = mknode ("!=", $1, NULL, NULL, $3); }
-    | expression AND expression {$$ = mknode ("&&", $1, NULL, NULL, $3); }
-    | expression OR expression {$$ = mknode ("||", $1, NULL, NULL, $3); }
-    | NOT expression {$$ = mknode ("NOT", $2, NULL, NULL, NULL);}
-    | INTEGER {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
+    expression PLUS expression {$$ = mknode("+"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression MINUS expression {$$ = mknode("-"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression MULTI expression {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression DIVISION expression {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression EQUAL expression  { $$ = mknode ("=="); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression GREATER expression  { $$ = mknode (">"); addNode(&$$,$1); addNode(&$$, $3); }
+    | expression GREATEREQUAL expression { $$ = mknode (">="); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression LESS expression { $$ = mknode ("<"); addNode(&$$,$1); addNode(&$$, $3); }
+    | expression LESSEQUAL expression { $$ = mknode ("<="); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression NOTEQUAL expression { $$ = mknode ("!="); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression AND expression {$$ = mknode ("&&"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression OR expression {$$ = mknode ("||"); addNode(&$$,$1); addNode(&$$, $3);}
+    | NOT expression {$$ = mknode ("NOT"); addNode(&$$,$2);}
+    | INTEGER {$$ = mknode(yytext);}
     | id
     ;
 id: 
-    ID {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
+    ID {$$ = mknode(yytext);}
     ;
 
 type:
-    VOID {$$ = mknode ("void", NULL, NULL, NULL, NULL); }
-    |INT {$$ = mknode ("int", NULL, NULL, NULL, NULL); }
-    |REAL {$$ = mknode ("real", NULL, NULL, NULL, NULL); }
-    |CHAR {$$ = mknode ("char", NULL, NULL, NULL, NULL); }
+    VOID {$$ = mknode ("void"); }
+    |INT {$$ = mknode ("int"); }
+    |REAL {$$ = mknode ("real"); }
+    |CHAR {$$ = mknode ("char"); }
     ;  
 
 args:
-    params_decleration args {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
-    |params_decleration SEMICOLON {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
-    |params_decleration SEMICOLON params_decleration {$$ = mknode("ARGS", $1, NULL, NULL, $3);}
-    | %empty {$$ = mknode("NONE", NULL, NULL, NULL, NULL);}
+    params_decleration args {$$ = mknode("ARGS"); addNode(&$$,$1);}
+    |params_decleration SEMICOLON {$$ = mknode("ARGS"); addNode(&$$,$1);}
+    |params_decleration SEMICOLON params_decleration {$$ = mknode("ARGS"); addNode(&$$,$1); addNode(&$$, $3);}
+    | %empty {$$ = mknode("NONE");}
     ;
 
 params_decleration:
-    type params {$$ = mknode($1->token, $2, NULL, NULL, NULL);}
+    type params {$$ = mknode($1->token); addNode(&$$, $2);}
     ;
 
 params:
-    id COMMA params {$$ = mknode($1->token, $3, NULL, NULL, NULL);}
-    |id {$$ = $1;}
+    id COMMA params
+    |id 
     ;
 
 %%
