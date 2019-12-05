@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include "lex.yy.c"
 #include "src/utils/functions.c"
+int yylex();
+int yyerror(char *s);
 %}
 
 %token FUNCTION VOID INT REAL SEMICOLON IF ELSE ASSIGNMENT GREATER PLUS LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN ID INTEGER CHAR RETURN COMMA BOOL MAIN INTPTR CHARPTR REALPTR STRDECLARE BOOLTRUE BOOLFALSE CSNULL LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES AND DIVISION EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE COLON HEX STR WHILE FOR DO VAR
@@ -91,10 +93,10 @@ id:
     ;
 
 type:
-    VOID {$$ = "void";}
-    |INT {$$ = "int";}
-    |REAL
-    |CHAR
+    VOID {$$ = mknode ("void", NULL, NULL, NULL, NULL); }
+    |INT {$$ = mknode ("int", NULL, NULL, NULL, NULL); }
+    |REAL {$$ = mknode ("real", NULL, NULL, NULL, NULL); }
+    |CHAR {$$ = mknode ("char", NULL, NULL, NULL, NULL); }
     ;
 
 function_type:
@@ -104,11 +106,6 @@ function_type:
     |CHAR {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
     ;    
 
-code_block:
-    LEFTBRACE RETURN RIGHTBRACE
-    |LEFTBRACE RIGHTBRACE
-    ;
-
 args:
     params_decleration args {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
     |params_decleration SEMICOLON {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
@@ -116,7 +113,7 @@ args:
     ;
 
 params_decleration:
-    type params {$$ = mknode($1, $2, NULL, NULL, NULL);}
+    type params {$$ = mknode($1->token, $2, NULL, NULL, NULL);}
     ;
 
 params:
@@ -126,15 +123,11 @@ params:
 
 %%
 
-void main(){
-   yyparse();
+int main(){
+   return yyparse();
 }
 
 int yyerror(char* s){
-    printf ("%s: found line:%d token [%s]\n", s, yylineno, yytext);
-    return 0;
-}
-
-int yywrap(){
+    printf("%s: found line:%d token [%s]\n", s, yylineno, yytext);
     return 0;
 }

@@ -1,1 +1,1 @@
-function void foo (int x; char b;) { x = 5 + 3 }
+function void foo (int x;) { x = 5 + 3 };
