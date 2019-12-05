@@ -43,11 +43,11 @@ function:
     ;
 
 void_func: 
-    FUNCTION function_type id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
+    FUNCTION type id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
     ; 
 
 value_func: 
-    FUNCTION function_type id LEFTPAREN args RIGHTPAREN value_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
+    FUNCTION type id LEFTPAREN args RIGHTPAREN value_block {$$ = mknode ("FUNCTION", $3 ,$5, $2, $7);}
     ;
 
  void_block:
@@ -97,19 +97,13 @@ type:
     |INT {$$ = mknode ("int", NULL, NULL, NULL, NULL); }
     |REAL {$$ = mknode ("real", NULL, NULL, NULL, NULL); }
     |CHAR {$$ = mknode ("char", NULL, NULL, NULL, NULL); }
-    ;
-
-function_type:
-    VOID {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
-    |INT {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
-    |REAL {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
-    |CHAR {$$ = mknode(yytext, NULL, NULL, NULL, NULL);}
-    ;    
+    ;  
 
 args:
     params_decleration args {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
     |params_decleration SEMICOLON {$$ = mknode("ARGS", $1, NULL, NULL, NULL);}
-    | %empty {$$ = mknode("ARGS NONE", NULL, NULL, NULL, NULL);}
+    |params_decleration SEMICOLON params_decleration {$$ = mknode("ARGS", $1, NULL, NULL, $3);}
+    | %empty {$$ = mknode("NONE", NULL, NULL, NULL, NULL);}
     ;
 
 params_decleration:
@@ -117,7 +111,7 @@ params_decleration:
     ;
 
 params:
-    id COMMA params {$$ = $1;}
+    id COMMA params {$$ = mknode($1->token, $3, NULL, NULL, NULL);}
     |id {$$ = $1;}
     ;
 
