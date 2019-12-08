@@ -5,7 +5,7 @@ all:
 
 git:
 	git config --global user.name "Sean1511"
-	git commit -am "initial"
+	git commit -am "add return value"
 	git push -u origin master
 	
 run:

@@ -47,3 +47,14 @@ node* mknode(char* token) {
 	newnode->count = 0;
 	return newnode;
 }
+
+void mknodelist(node* father, node* son) {
+	node* temp = son;
+	addNode(&father, mknode(son->token));
+	while (temp->nodes) {
+		temp = temp->nodes[0];
+		addNode(&father, mknode(temp->token));
+	}
+}
+
+

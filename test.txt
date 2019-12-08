@@ -1,4 +1,1 @@
-function void foo (int x, y,h; char t)
-{ x = x + y 
-y = 9 + 5
-};
+function char goo(){ return 'a' ; }
