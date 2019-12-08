@@ -5,7 +5,7 @@ all:
 
 git:
 	git config --global user.name "Sean1511"
-	git commit -am "add return value"
+	git commit -am "fix reduce confilcts"
 	git push -u origin master
 	
 run:
