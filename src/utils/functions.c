@@ -57,4 +57,13 @@ void mknodelist(node* father, node* son) {
 	}
 }
 
+void addsubtree(node* father, node* son) {
+	node* temp = son;
+	addNode(&father, son);
+	while (temp->nodes) {
+		temp = temp->nodes[0];
+		addNode(&father, mknode(temp->token));
+	}
+}
+
 

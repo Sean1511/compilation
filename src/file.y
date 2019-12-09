@@ -8,7 +8,7 @@ int yylex(void);
 int yyerror(char *s);
 %}
 
-%token FUNCTION VOID INT REAL SEMICOLON IF ELSE ASSIGNMENT GREATER PLUS LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN ID INTEGER CHAR RETURN COMMA BOOL MAIN INTPTR CHARPTR REALPTR STRDECLARE BOOLTRUE BOOLFALSE CSNULL LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES AND DIVISION EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE COLON HEX STR WHILE FOR DO VAR
+%token FUNCTION VOID INT REAL SEMICOLON IF ELSE ASSIGNMENT GREATER PLUS LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN ID INTEGER CHAR RETURN COMMA BOOL MAIN INTPTR CHARPTR REALPTR STRDECLARE BOOLTRUE BOOLFALSE CSNULL LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES AND DIVISION EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE COLON HEX STR WHILE FOR DO VAR CHARACTER REAL_D
 
 %nonassoc AND OR
 %right ASSIGNMENT NOT SEMICOLON MAIN
@@ -33,7 +33,7 @@ Main: id //fix
     ;
 
 functions:
-    functions function
+    function functions {addNode(&$1, $2);}
     | function
     ;
 
@@ -57,23 +57,28 @@ value_func:
     ;
     
 value_block:
-    LEFTBRACE RETURN QUOTES expression QUOTES SEMICOLON RIGHTBRACE {$$ = mknode ("BODY"); addNode(&$$, mknode("RET")); addNode(&$$,$4);}
-    |LEFTBRACE statments RETURN QUOTES expression QUOTES SEMICOLON RIGHTBRACE {$$ = mknode ("BODY"); addNode(&$$,$2); addNode(&$$, $3);} //fix
+    LEFTBRACE RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode ("BODY"); node* ret = mknode("RET"); addNode(&ret,$3); addNode(&$$,ret);}
+    |LEFTBRACE statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode ("BODY"); addNode(&$$,$2); addNode(&$$, mknode("RET")); addNode(&$$, $3);} 
     |LEFTBRACE functions statments RETURN expression RIGHTBRACE {$$ = mknode("BODY"); addNode(&$$, $2); addNode(&$$,$3); addNode(&$$,$4);} //fix
     ; 
  
 statments:
-    statments statment
+    statment statments {addNode(&$1, $2);}
     | statment
     ;
     
 statment:
     stat_assignment SEMICOLON
-    |if_statment
+    |if_statment 
+    |if_else_statment
     ;
 
 if_statment:
     IF LEFTPAREN condition RIGHTPAREN block {$$ = mknode("IF"); addNode(&$$, $3); addNode(&$$,$5);}
+    ;
+
+if_else_statment:
+    IF LEFTPAREN condition RIGHTPAREN block ELSE block {$$ = mknode("IF-ELSE"); addNode(&$$, $3); addNode(&$$,$5); addNode(&$$, $7);}
     ;
 
 stat_assignment:
@@ -88,6 +93,8 @@ expression:
     | expression AND expression {$$ = mknode ("&&"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression OR expression {$$ = mknode ("||"); addNode(&$$,$1); addNode(&$$, $3);}
     | INTEGER {$$ = mknode(yytext);}
+    | CHARACTER {$$ = mknode(yytext);}
+    | REAL_D {$$ = mknode(yytext);}
     | id
     ;
 

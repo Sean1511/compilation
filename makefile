@@ -5,7 +5,7 @@ all:
 
 git:
 	git config --global user.name "Sean1511"
-	git commit -am "fix reduce confilcts"
+	git commit -am "if_else"
 	git push -u origin master
 	
 run:

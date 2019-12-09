@@ -98,7 +98,9 @@ extern int yydebug;
     WHILE = 308,
     FOR = 309,
     DO = 310,
-    VAR = 311
+    VAR = 311,
+    CHARACTER = 312,
+    REAL_D = 313
   };
 #endif
 /* Tokens.  */
@@ -156,6 +158,8 @@ extern int yydebug;
 #define FOR 309
 #define DO 310
 #define VAR 311
+#define CHARACTER 312
+#define REAL_D 313
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
