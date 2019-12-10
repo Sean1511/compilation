@@ -100,7 +100,8 @@ extern int yydebug;
     DO = 310,
     VAR = 311,
     CHARACTER = 312,
-    REAL_D = 313
+    REAL_D = 313,
+    XIF = 314
   };
 #endif
 /* Tokens.  */
@@ -160,6 +161,7 @@ extern int yydebug;
 #define VAR 311
 #define CHARACTER 312
 #define REAL_D 313
+#define XIF 314
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED

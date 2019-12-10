@@ -3,7 +3,7 @@
     #include <string.h> 
     #define YYSTYPE struct node *
     #include "y.tab.h"
-    int yylineno;
+    int linecount;
 %}
 
 %%
@@ -15,7 +15,7 @@
 "int" return INT;
 "int*" return INTPTR;
 "char*" return CHARPTR;
-"string" return STRDECLARE;
+"string" return STRING;
 "real" return REAL;
 "real*" return REALPTR;
 "char" return CHAR;
@@ -63,7 +63,7 @@
 \'.\' return CHARACTER;
 0(x|X)0[0-9A-F] return HEX;
 "\""[a-zA-z0-9][A-z]"\"" return STR;
-\n  yylineno++;
+\n  linecount++;
 [ \t\r] ;
 . return yytext[0];
 %%

@@ -537,7 +537,7 @@ char *yytext;
     #include <string.h> 
     #define YYSTYPE struct node *
     #include "y.tab.h"
-    int yylineno;
+    int linecount;
 #line 542 "lex.yy.c"
 #line 543 "lex.yy.c"
 
@@ -1099,7 +1099,7 @@ case 57:
 /* rule 57 can match eol */
 YY_RULE_SETUP
 #line 66 "src/file.l"
-yylineno++;
+linecount++;
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
