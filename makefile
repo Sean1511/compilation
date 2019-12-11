@@ -5,7 +5,7 @@ all:
 
 git:
 	git config --global user.name "Sean1511"
-	git commit -am "after_loops"
+	git commit -am "before crysis"
 	git push -u origin master
 	
 run:
