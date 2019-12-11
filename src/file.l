@@ -3,7 +3,7 @@
     #include <string.h> 
     #define YYSTYPE struct node *
     #include "y.tab.h"
-    int linecount;
+    int linecount = 1;
 %}
 
 %%

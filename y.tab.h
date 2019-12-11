@@ -69,7 +69,7 @@ extern int yydebug;
     INTPTR = 279,
     CHARPTR = 280,
     REALPTR = 281,
-    STRDECLARE = 282,
+    STRING = 282,
     BOOLTRUE = 283,
     BOOLFALSE = 284,
     CSNULL = 285,
@@ -101,7 +101,8 @@ extern int yydebug;
     VAR = 311,
     CHARACTER = 312,
     REAL_D = 313,
-    XIF = 314
+    MA = 314,
+    XIF = 315
   };
 #endif
 /* Tokens.  */
@@ -129,7 +130,7 @@ extern int yydebug;
 #define INTPTR 279
 #define CHARPTR 280
 #define REALPTR 281
-#define STRDECLARE 282
+#define STRING 282
 #define BOOLTRUE 283
 #define BOOLFALSE 284
 #define CSNULL 285
@@ -161,7 +162,8 @@ extern int yydebug;
 #define VAR 311
 #define CHARACTER 312
 #define REAL_D 313
-#define XIF 314
+#define MA 314
+#define XIF 315
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED

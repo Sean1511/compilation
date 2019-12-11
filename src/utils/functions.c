@@ -57,13 +57,34 @@ void mknodelist(node* father, node* son) {
 	}
 }
 
-void addsubtree(node* father, node* son) {
-	node* temp = son;
-	addNode(&father, son);
-	while (temp->nodes) {
-		temp = temp->nodes[0];
-		addNode(&father, mknode(temp->token));
+node* combine(char* token, node* one, node* two) {
+	int i = 0, j = 0;
+	node* new = (node*)malloc(sizeof(node));
+	new->token = strdup(token);
+	new->count = one->count + two->count;
+	if (one->count == 0)
+		new->count++;
+	if (two->count == 0)
+		new->count++;
+	new->nodes = (node**)malloc(sizeof(node*) * new->count);
+	if (one->count == 0)
+		new->nodes[j++] = one;
+	else {
+		for (j, i = 0; i < one->count; j++, i++) {
+			new->nodes[j] = one->nodes[i];
+		}
+		free(one);
 	}
+	if (two->count == 0)
+		new->nodes[j++] = two;
+	else {
+		for (j, i = 0; i < two->count; j++, i++) {
+			new->nodes[j] = two->nodes[i];
+		}
+		free(two);
+	}
+	return new;
 }
+
 
 

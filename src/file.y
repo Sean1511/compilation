@@ -8,8 +8,9 @@ int yylex(void);
 int yyerror(char *s);
 %}
 
-%token FUNCTION VOID INT REAL SEMICOLON IF ELSE ASSIGNMENT GREATER PLUS LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN ID INTEGER CHAR RETURN COMMA BOOL MAIN INTPTR CHARPTR REALPTR STRDECLARE BOOLTRUE BOOLFALSE CSNULL LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES AND DIVISION EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE COLON HEX STR WHILE FOR DO VAR CHARACTER REAL_D
+%token FUNCTION VOID INT REAL SEMICOLON IF ELSE ASSIGNMENT GREATER PLUS LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN ID INTEGER CHAR RETURN COMMA BOOL MAIN INTPTR CHARPTR REALPTR STRING BOOLTRUE BOOLFALSE CSNULL LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES AND DIVISION EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE COLON HEX STR WHILE FOR DO VAR CHARACTER REAL_D 
 
+%nonassoc MA
 %nonassoc XIF
 %nonassoc ELSE
 %nonassoc AND OR
@@ -26,16 +27,16 @@ s:
     ;
 
 code:
-    functions Main {$$ = mknode ("CODE"); }
-    | functions {$$ = mknode ("CODE"); addNode(&$$, $1); }
-    | Main {$$ = mknode ("CODE"); }     
+    functions Main {$$ = mknode ("CODE"); addNode(&$$, $1); addNode(&$$, $2);}
+    | Main {$$ = mknode ("CODE"); addNode(&$$, $1);} 
     ;
 
-Main: id //fix
+Main: 
+    FUNCTION VOID MAIN LEFTPAREN RIGHTPAREN void_block {$$ = mknode("MAIN"); addNode(&$$, $6);} 
     ;
 
 functions:
-    function functions {addNode(&$1, $2);}
+    functions function {addNode(&$1, $2);}
     | function
     ;
 
@@ -69,16 +70,18 @@ value_block:
     ; 
  
 statments:
-    statment statments {addNode(&$1, $2);}
+    statment statments {$$ = combine("sean", $1, $2);}
     |statment
     ;
     
 statment:
     stat_assignment SEMICOLON
+    |string_assignment SEMICOLON
     |if_statment 
     |if_else_statment
     |loop_statment
     |block 
+    |func_call
     ;
 
 if_statment:
@@ -106,8 +109,11 @@ do_while:
     DO block WHILE LEFTPAREN condition RIGHTPAREN SEMICOLON {$$ = mknode("DO-WHILE"); addNode(&$$, $2); addNode(&$$, $5);}
 
 stat_assignment:
-    id ASSIGNMENT expression {$$ = mknode("="); addNode(&$$,$1); addNode(&$$,$3);}
-    STRING id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string SEMICOLON {$$ = mknode}
+    id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
+    ;
+
+string_assignment:
+    id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT char {$$ = mknode("="); addNode(&$$, $1); addNode(&$$,$3); addNode(&$$, $6);}
     ;
 
 expression:
@@ -115,10 +121,8 @@ expression:
     | expression MINUS expression {$$ = mknode("-"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression MULTI expression {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression DIVISION expression {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression AND expression {$$ = mknode ("&&"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression OR expression {$$ = mknode ("||"); addNode(&$$,$1); addNode(&$$, $3);}
     | INTEGER {$$ = mknode(yytext);}
-    | CHARACTER {$$ = mknode(yytext);}
+    | char
     | REAL_D {$$ = mknode(yytext);}
     | id
     ;
@@ -130,6 +134,11 @@ int_exp:
     | int_exp DIVISION int_exp {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);} 
     | INTEGER {$$ = mknode(yytext);}
     ;
+
+func_call: 
+    id LEFTPAREN params RIGHTPAREN SEMICOLON { $$ = mknode ("FUNC_CALL"); addNode(&$$,$1); node* args = mknode("ARGS"); mknodelist(args, $3); addNode(&$$, args);}
+    |id ASSIGNMENT id LEFTPAREN params RIGHTPAREN SEMICOLON { $$ = mknode ("="); addNode(&$$,$1); node* call = mknode("FUNC_CALL"); node* args = mknode("ARGS"); mknodelist(args, $5); addNode(&call, args); addNode(&$$, call);}
+    ; 
 
 condition:
     logical_exp AND condition {$$ = mknode("&&"); addNode(&$$,$1); addNode(&$$,$3); } %prec AND
@@ -149,21 +158,22 @@ logical_exp:
 
 block:
     LEFTBRACE statments RIGHTBRACE {$$ = mknode("BLOCK"); addNode(&$$,$2);}
-    | LEFTBRACE RIGHTBRACE {$$ = mknode("BLOCK");}
+    |LEFTBRACE RIGHTBRACE {$$ = mknode("BLOCK");}
     ;   
 
 func_type:
-    VOID {$$ = mknode ("TYPE VOID"); }
-    |INT {$$ = mknode ("TYPE INT"); }
-    |REAL {$$ = mknode ("TYPE REAL"); } 
-    |CHAR {$$ = mknode ("TYPE CHAR"); }
+    VOID {$$ = mknode ("TYPE VOID");}
+    |INT {$$ = mknode ("TYPE INT");}
+    |REAL {$$ = mknode ("TYPE REAL");} 
+    |CHAR {$$ = mknode ("TYPE CHAR");}
+    |BOOL {$$ = mknode ("TYPE BOOL");}
     ;
 
 var_type:  
     INT {$$ = mknode ("INT"); }
     |REAL {$$ = mknode ("REAL"); } 
     |CHAR {$$ = mknode ("CHAR"); }
-    |STR {$$ = mknode("STR");}
+    |BOOL {$$ = mknode ("BOOL");}
     ;    
 
 args:
@@ -176,7 +186,15 @@ args:
 var_decleration:
     VAR params_decleration SEMICOLON var_decleration {$$ = mknode("VAR"); addNode(&$$, $2); addNode(&$$, $4);}
     |VAR params_decleration SEMICOLON {$$ = mknode("VAR"); addNode(&$$, $2);}
-    |    
+    |STRING string_decleration SEMICOLON {$$ = mknode("STRING"); addNode(&$$, $2);}
+    ;
+
+string_decleration:
+    id LEFTBRACKET int_exp RIGHTBRACKET COMMA string_decleration {$$ = $1; addNode(&$$,$3); addNode(&$$,$6);}
+    | id LEFTBRACKET int_exp RIGHTBRACKET {$$ = $1; addNode(&$$,$3);}
+    | id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string {$$ = mknode("="); addNode(&$$,$1); addNode(&$1,$3); addNode(&$$, $6);}
+    | id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string COMMA string_decleration {$$ = mknode("="); addNode(&$$,$1); addNode(&$1,$3); addNode(&$$, $6); addNode(&$$, $8);}
+    ;
 
 params_decleration:
     var_type params {$$ = mknode($1->token); mknodelist($$,$2);}
@@ -189,11 +207,17 @@ params:
 
 string:
     STR {$$ = mknode(yytext);}
+    ;
 
+char:
+    CHARACTER {$$ = mknode(yytext);}
+    ;
 
 id: 
     ID {$$ = mknode(yytext);}
     ;
+
+
 %%
 
 int main(){

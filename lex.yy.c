@@ -537,7 +537,7 @@ char *yytext;
     #include <string.h> 
     #define YYSTYPE struct node *
     #include "y.tab.h"
-    int linecount;
+    int linecount = 1;
 #line 542 "lex.yy.c"
 #line 543 "lex.yy.c"
 
@@ -858,7 +858,7 @@ return CHARPTR;
 case 9:
 YY_RULE_SETUP
 #line 18 "src/file.l"
-return STRDECLARE;
+return STRING;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
