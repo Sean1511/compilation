@@ -86,5 +86,16 @@ node* combine(char* token, node* one, node* two) {
 	return new;
 }
 
+void addlist(node* root, node* arr){
+	if (arr->count == 0){
+		addNode(&root, arr);
+	}
+	else{
+		for (int i =0; i< arr->count;i++){
+			addNode(&root,arr->nodes[i]);
+		}
+	}
+}
+
 
 

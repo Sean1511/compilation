@@ -5,7 +5,7 @@ all:
 
 git:
 	git config --global user.name "Sean1511"
-	git commit -am "before crysis"
+	git commit -am "great work"
 	git push -u origin master
 	
 run:
