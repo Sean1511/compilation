@@ -242,7 +242,7 @@ variables:
     ;
 
 params:
-    id COMMA params {addNode(&$1,$3);}
+    id COMMA params  {addNode(&$1,$3);}
     |id 
     ;
 
