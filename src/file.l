@@ -61,8 +61,9 @@
 [-+]?[1-9][0-9]*|0 return INTEGER;
 [-+]?[0-9][0-9]*\.[0-9][0-9]* return REAL_D;
 \'.\' return CHARACTER;
-0(x|X)0[0-9A-F] return HEX;
+0(x|X)[0-9A-F]+ return HEX;
 "\""[a-zA-z0-9][A-z]"\"" return STR;
+"/*"((\*+[^/*])|([^*]))*\**"*/" return COMMENTS;
 \n  linecount++;
 [ \t\r] ;
 . return yytext[0];

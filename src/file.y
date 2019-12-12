@@ -8,7 +8,11 @@ int yylex(void);
 int yyerror(char *s);
 %}
 
-%token FUNCTION VOID INT REAL SEMICOLON IF ELSE ASSIGNMENT GREATER PLUS LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN ID INTEGER CHAR RETURN COMMA BOOL MAIN INTPTR CHARPTR REALPTR STRING BOOLTRUE BOOLFALSE CSNULL LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES AND DIVISION EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE COLON HEX STR WHILE FOR DO VAR CHARACTER REAL_D 
+%token FUNCTION VOID RETURN MAIN COMMENTS
+%token INT REAL ID INTEGER CHAR BOOL INTPTR CHARPTR REALPTR STRING BOOLTRUE BOOLFALSE CSNULL REAL_D CHARACTER HEX STR VAR   
+%token IF ELSE WHILE FOR DO
+%token GREATER PLUS ASSIGNMENT COMMA DIVISION AND EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE
+%token SEMICOLON LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES COLON   
 
 %nonassoc XIF
 %nonassoc ELSE
@@ -120,7 +124,9 @@ expression:
     | expression MINUS expression {$$ = mknode("-"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression MULTI expression {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression DIVISION expression {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
+    | LEFTPAREN expression RIGHTPAREN {$$ = $2;}
     | INTEGER {$$ = mknode(yytext);}
+    | HEX {$$ = mknode(yytext);}
     | char
     | REAL_D {$$ = mknode(yytext);}
     | id
@@ -130,13 +136,17 @@ int_exp:
     int_exp PLUS int_exp {$$ = mknode("+"); addNode(&$$,$1); addNode(&$$, $3);}
     | int_exp MINUS int_exp {$$ = mknode("-"); addNode(&$$,$1); addNode(&$$, $3);}
     | int_exp MULTI int_exp {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);}
-    | int_exp DIVISION int_exp {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);} 
+    | int_exp DIVISION int_exp {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
+    | LEFTPAREN int_exp RIGHTPAREN {$$ = $2;} 
     | INTEGER {$$ = mknode(yytext);}
+    | HEX {$$ = mknode(yytext);}
     ;
 
 func_call: 
     id LEFTPAREN params RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode ("FUNC_CALL"); addNode(&s,$1); node* args = mknode("ARGS"); mknodelist(args, $3); addNode(&s, args); addNode(&$$,s);}
     |id ASSIGNMENT id LEFTPAREN params RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); node* args = mknode("ARGS"); mknodelist(args, $5); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
+    |id LEFTPAREN RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode ("FUNC_CALL"); addNode(&s,$1); node* args = mknode("ARGS NONE"); addNode(&s, args); addNode(&$$,s);}
+    |id ASSIGNMENT id LEFTPAREN RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); node* args = mknode("ARGS NONE"); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
     ; 
 
 condition:
@@ -153,6 +163,7 @@ logical_exp:
     | expression LESSEQUAL expression { $$ = mknode ("<="); addNode(&$$,$1); addNode(&$$, $3);}
     | expression NOTEQUAL expression { $$ = mknode ("!="); addNode(&$$,$1); addNode(&$$, $3);}
     | NOT expression {$$ = mknode ("NOT"); addNode(&$$,$2);}
+    | LEFTPAREN logical_exp RIGHTPAREN {$$ = $2;} 
     ;
 
 block:
@@ -182,6 +193,12 @@ args:
     |%empty {$$ = mknode("ARGS NONE");}
     ;
 
+declerations:
+    declerations var_decleration
+    | var_decleration
+    |declerations string_decleration
+    |string_decleration
+
 var_decleration:
     var_decleration VAR params_decleration SEMICOLON {$$ = combine("fd",$1,$3);}
     |VAR params_decleration SEMICOLON {$$ = $2;}
@@ -202,6 +219,10 @@ params_decleration:
 params:
     id COMMA params {addNode(&$1,$3);}
     |id 
+    ;
+
+csnull: 
+    CSNULL  { $$ = mknode (yytext, NULL, NULL, NULL);}
     ;
 
 string:

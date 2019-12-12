@@ -47,121 +47,123 @@ extern int yydebug;
   {
     FUNCTION = 258,
     VOID = 259,
-    INT = 260,
-    REAL = 261,
-    SEMICOLON = 262,
-    IF = 263,
-    ELSE = 264,
-    ASSIGNMENT = 265,
-    GREATER = 266,
-    PLUS = 267,
-    LEFTBRACE = 268,
-    RIGHTBRACE = 269,
-    LEFTPAREN = 270,
-    RIGHTPAREN = 271,
-    ID = 272,
-    INTEGER = 273,
-    CHAR = 274,
-    RETURN = 275,
-    COMMA = 276,
-    BOOL = 277,
-    MAIN = 278,
-    INTPTR = 279,
-    CHARPTR = 280,
-    REALPTR = 281,
-    STRING = 282,
-    BOOLTRUE = 283,
-    BOOLFALSE = 284,
-    CSNULL = 285,
-    LEFTBRACKET = 286,
-    RIGHTBRACKET = 287,
-    PERCENT = 288,
-    QUOTES = 289,
-    DOUBLEQUOTES = 290,
+    RETURN = 260,
+    MAIN = 261,
+    COMMENTS = 262,
+    INT = 263,
+    REAL = 264,
+    ID = 265,
+    INTEGER = 266,
+    CHAR = 267,
+    BOOL = 268,
+    INTPTR = 269,
+    CHARPTR = 270,
+    REALPTR = 271,
+    STRING = 272,
+    BOOLTRUE = 273,
+    BOOLFALSE = 274,
+    CSNULL = 275,
+    REAL_D = 276,
+    CHARACTER = 277,
+    HEX = 278,
+    STR = 279,
+    VAR = 280,
+    IF = 281,
+    ELSE = 282,
+    WHILE = 283,
+    FOR = 284,
+    DO = 285,
+    GREATER = 286,
+    PLUS = 287,
+    ASSIGNMENT = 288,
+    COMMA = 289,
+    DIVISION = 290,
     AND = 291,
-    DIVISION = 292,
-    EQUAL = 293,
-    GREATEREQUAL = 294,
-    LESS = 295,
-    LESSEQUAL = 296,
-    MINUS = 297,
-    NOT = 298,
-    NOTEQUAL = 299,
-    OR = 300,
-    MULTI = 301,
-    ADDRESS = 302,
-    DEREFERENCE = 303,
-    ABSUOLUTE = 304,
-    COLON = 305,
-    HEX = 306,
-    STR = 307,
-    WHILE = 308,
-    FOR = 309,
-    DO = 310,
-    VAR = 311,
-    CHARACTER = 312,
-    REAL_D = 313,
-    XIF = 314
+    EQUAL = 292,
+    GREATEREQUAL = 293,
+    LESS = 294,
+    LESSEQUAL = 295,
+    MINUS = 296,
+    NOT = 297,
+    NOTEQUAL = 298,
+    OR = 299,
+    MULTI = 300,
+    ADDRESS = 301,
+    DEREFERENCE = 302,
+    ABSUOLUTE = 303,
+    SEMICOLON = 304,
+    LEFTBRACE = 305,
+    RIGHTBRACE = 306,
+    LEFTPAREN = 307,
+    RIGHTPAREN = 308,
+    LEFTBRACKET = 309,
+    RIGHTBRACKET = 310,
+    PERCENT = 311,
+    QUOTES = 312,
+    DOUBLEQUOTES = 313,
+    COLON = 314,
+    XIF = 315
   };
 #endif
 /* Tokens.  */
 #define FUNCTION 258
 #define VOID 259
-#define INT 260
-#define REAL 261
-#define SEMICOLON 262
-#define IF 263
-#define ELSE 264
-#define ASSIGNMENT 265
-#define GREATER 266
-#define PLUS 267
-#define LEFTBRACE 268
-#define RIGHTBRACE 269
-#define LEFTPAREN 270
-#define RIGHTPAREN 271
-#define ID 272
-#define INTEGER 273
-#define CHAR 274
-#define RETURN 275
-#define COMMA 276
-#define BOOL 277
-#define MAIN 278
-#define INTPTR 279
-#define CHARPTR 280
-#define REALPTR 281
-#define STRING 282
-#define BOOLTRUE 283
-#define BOOLFALSE 284
-#define CSNULL 285
-#define LEFTBRACKET 286
-#define RIGHTBRACKET 287
-#define PERCENT 288
-#define QUOTES 289
-#define DOUBLEQUOTES 290
+#define RETURN 260
+#define MAIN 261
+#define COMMENTS 262
+#define INT 263
+#define REAL 264
+#define ID 265
+#define INTEGER 266
+#define CHAR 267
+#define BOOL 268
+#define INTPTR 269
+#define CHARPTR 270
+#define REALPTR 271
+#define STRING 272
+#define BOOLTRUE 273
+#define BOOLFALSE 274
+#define CSNULL 275
+#define REAL_D 276
+#define CHARACTER 277
+#define HEX 278
+#define STR 279
+#define VAR 280
+#define IF 281
+#define ELSE 282
+#define WHILE 283
+#define FOR 284
+#define DO 285
+#define GREATER 286
+#define PLUS 287
+#define ASSIGNMENT 288
+#define COMMA 289
+#define DIVISION 290
 #define AND 291
-#define DIVISION 292
-#define EQUAL 293
-#define GREATEREQUAL 294
-#define LESS 295
-#define LESSEQUAL 296
-#define MINUS 297
-#define NOT 298
-#define NOTEQUAL 299
-#define OR 300
-#define MULTI 301
-#define ADDRESS 302
-#define DEREFERENCE 303
-#define ABSUOLUTE 304
-#define COLON 305
-#define HEX 306
-#define STR 307
-#define WHILE 308
-#define FOR 309
-#define DO 310
-#define VAR 311
-#define CHARACTER 312
-#define REAL_D 313
-#define XIF 314
+#define EQUAL 292
+#define GREATEREQUAL 293
+#define LESS 294
+#define LESSEQUAL 295
+#define MINUS 296
+#define NOT 297
+#define NOTEQUAL 298
+#define OR 299
+#define MULTI 300
+#define ADDRESS 301
+#define DEREFERENCE 302
+#define ABSUOLUTE 303
+#define SEMICOLON 304
+#define LEFTBRACE 305
+#define RIGHTBRACE 306
+#define LEFTPAREN 307
+#define RIGHTPAREN 308
+#define LEFTBRACKET 309
+#define RIGHTBRACKET 310
+#define PERCENT 311
+#define QUOTES 312
+#define DOUBLEQUOTES 313
+#define COLON 314
+#define XIF 315
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
