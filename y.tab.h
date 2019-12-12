@@ -49,25 +49,25 @@ extern int yydebug;
     VOID = 259,
     RETURN = 260,
     MAIN = 261,
-    COMMENTS = 262,
-    INT = 263,
-    REAL = 264,
-    ID = 265,
-    INTEGER = 266,
-    CHAR = 267,
-    BOOL = 268,
-    INTPTR = 269,
-    CHARPTR = 270,
-    REALPTR = 271,
-    STRING = 272,
-    BOOLTRUE = 273,
-    BOOLFALSE = 274,
-    CSNULL = 275,
-    REAL_D = 276,
-    CHARACTER = 277,
-    HEX = 278,
-    STR = 279,
-    VAR = 280,
+    INT = 262,
+    REAL = 263,
+    ID = 264,
+    INTEGER = 265,
+    CHAR = 266,
+    BOOL = 267,
+    INTPTR = 268,
+    CHARPTR = 269,
+    REALPTR = 270,
+    STRING = 271,
+    BOOLTRUE = 272,
+    BOOLFALSE = 273,
+    CSNULL = 274,
+    REAL_D = 275,
+    CHARACTER = 276,
+    HEX = 277,
+    STR = 278,
+    VAR = 279,
+    SIZE = 280,
     IF = 281,
     ELSE = 282,
     WHILE = 283,
@@ -110,25 +110,25 @@ extern int yydebug;
 #define VOID 259
 #define RETURN 260
 #define MAIN 261
-#define COMMENTS 262
-#define INT 263
-#define REAL 264
-#define ID 265
-#define INTEGER 266
-#define CHAR 267
-#define BOOL 268
-#define INTPTR 269
-#define CHARPTR 270
-#define REALPTR 271
-#define STRING 272
-#define BOOLTRUE 273
-#define BOOLFALSE 274
-#define CSNULL 275
-#define REAL_D 276
-#define CHARACTER 277
-#define HEX 278
-#define STR 279
-#define VAR 280
+#define INT 262
+#define REAL 263
+#define ID 264
+#define INTEGER 265
+#define CHAR 266
+#define BOOL 267
+#define INTPTR 268
+#define CHARPTR 269
+#define REALPTR 270
+#define STRING 271
+#define BOOLTRUE 272
+#define BOOLFALSE 273
+#define CSNULL 274
+#define REAL_D 275
+#define CHARACTER 276
+#define HEX 277
+#define STR 278
+#define VAR 279
+#define SIZE 280
 #define IF 281
 #define ELSE 282
 #define WHILE 283

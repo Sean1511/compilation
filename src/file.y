@@ -8,8 +8,8 @@ int yylex(void);
 int yyerror(char *s);
 %}
 
-%token FUNCTION VOID RETURN MAIN COMMENTS
-%token INT REAL ID INTEGER CHAR BOOL INTPTR CHARPTR REALPTR STRING BOOLTRUE BOOLFALSE CSNULL REAL_D CHARACTER HEX STR VAR   
+%token FUNCTION VOID RETURN MAIN
+%token INT REAL ID INTEGER CHAR BOOL INTPTR CHARPTR REALPTR STRING BOOLTRUE BOOLFALSE CSNULL REAL_D CHARACTER HEX STR VAR SIZE   
 %token IF ELSE WHILE FOR DO
 %token GREATER PLUS ASSIGNMENT COMMA DIVISION AND EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE
 %token SEMICOLON LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES COLON   
@@ -39,7 +39,7 @@ Main:
     ;
 
 functions:
-    functions function {$$ = combine("sean", $1, $2);}
+    functions function {$$ = integrate("sean", $1, $2);}
     | function
     ;
 
@@ -58,9 +58,9 @@ value_func:
 
  void_block:
     LEFTBRACE RIGHTBRACE {$$ = mknode ("BODY"); }
-    |LEFTBRACE var_decleration statments RIGHTBRACE {$$ = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,$2);addNode(&$$,v); addlist($$, $3);}
+    |LEFTBRACE declerations statments RIGHTBRACE {$$ = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,$2);addNode(&$$,v); addlist($$, $3);}
     |LEFTBRACE statments RIGHTBRACE {$$ = mknode ("BODY"); addlist($$,$2);}
-    |LEFTBRACE functions var_decleration statments RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); node* v = mknode("VAR"); addlist(v,$3);addNode(&$$,v);addlist($$,$4);}
+    |LEFTBRACE functions declerations statments RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); node* v = mknode("VAR"); addlist(v,$3);addNode(&$$,v);addlist($$,$4);}
     |LEFTBRACE functions statments RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); addlist($$,$3);}
     ;
     
@@ -68,12 +68,12 @@ value_block:
     LEFTBRACE RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode ("BODY"); node* ret = mknode("RET"); addNode(&ret,$3); addNode(&$$,ret);}
     |LEFTBRACE statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode ("BODY"); addlist($$, $2); node* ret = mknode("RET"); addNode(&ret,$4); addNode(&$$,ret);}
     |LEFTBRACE functions statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); addlist($$,$3); node* ret = mknode("RET"); addNode(&ret,$5); addNode(&$$,ret);}
-    |LEFTBRACE var_decleration statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode ("BODY");node* v = mknode("VAR"); addlist(v, $2); addNode(&$$,v); addlist($$, $3); node* ret = mknode("RET"); addNode(&ret,$5); addNode(&$$,ret);}
-    |LEFTBRACE functions var_decleration statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2);  node* v = mknode("VAR"); addlist(v, $3); addNode(&$$,v); addlist($$, $4); node* ret = mknode("RET"); addNode(&ret,$6); addNode(&$$,ret);}
+    |LEFTBRACE declerations statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode ("BODY");node* v = mknode("VAR"); addlist(v, $2); addNode(&$$,v); addlist($$, $3); node* ret = mknode("RET"); addNode(&ret,$5); addNode(&$$,ret);}
+    |LEFTBRACE functions declerations statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2);  node* v = mknode("VAR"); addlist(v, $3); addNode(&$$,v); addlist($$, $4); node* ret = mknode("RET"); addNode(&ret,$6); addNode(&$$,ret);}
     ; 
  
 statments:
-    statments statment {$$ = combine("", $1, $2);}
+    statments statment {$$ = integrate("", $1, $2);}
     |statment
     ;
     
@@ -116,7 +116,7 @@ stat_assignment:
     ;
 
 string_assignment:
-    id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT char {$$ = mknode("="); addNode(&$$, $1); addNode(&$$,$3); addNode(&$$, $6);}
+    id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT char {$$ = mknode("s"); node* s = mknode("="); node* index = mknode("INDEX"); addNode(&index,$3); addNode(&$1, index); addNode(&s, $1); addNode(&s,$6); addNode(&$$,s);}
     ;
 
 expression:
@@ -127,9 +127,14 @@ expression:
     | LEFTPAREN expression RIGHTPAREN {$$ = $2;}
     | INTEGER {$$ = mknode(yytext);}
     | HEX {$$ = mknode(yytext);}
-    | char
     | REAL_D {$$ = mknode(yytext);}
+    | SIZE {$$ = mknode(yytext);}
+    | BOOLTRUE {$$ = mknode(yytext);}
+    | BOOLFALSE {$$ = mknode(yytext);}
+    | ADDRESS id {char* t = $2->token; char *s = malloc(strlen(t)+strlen("&")+1); strcat (s,"&"); strcat(s,t); $$ = mknode(s);}
+    | csnull
     | id
+    | char
     ;
 
 int_exp:
@@ -177,43 +182,63 @@ func_type:
     |REAL {$$ = mknode ("TYPE REAL");} 
     |CHAR {$$ = mknode ("TYPE CHAR");}
     |BOOL {$$ = mknode ("TYPE BOOL");}
+    |INTPTR {$$ = mknode ("TYPE INT*");}
+    |CHARPTR {$$ = mknode ("TYPE CHAR*");}
+    |REALPTR {$$ = mknode ("TYPE REAL*");}
     ;
 
 var_type:  
-    INT {$$ = mknode ("INT"); }
-    |REAL {$$ = mknode ("REAL"); } 
-    |CHAR {$$ = mknode ("CHAR"); }
+    INT {$$ = mknode ("INT");}
+    |REAL {$$ = mknode ("REAL");} 
+    |CHAR {$$ = mknode ("CHAR");}
     |BOOL {$$ = mknode ("BOOL");}
+    |INTPTR {$$ = mknode ("INT*");}
+    |CHARPTR {$$ = mknode ("CHAR*");}
+    |REALPTR {$$ = mknode ("REAL*");}
     ;    
 
 args:
-    params_decleration args {$$ = mknode("ARGS"); addlist($$,$1);}
-    |params_decleration SEMICOLON {$$ = mknode("ARGS"); addlist($$,$1);}
-    |params_decleration SEMICOLON params_decleration {$$ = mknode("ARGS"); addlist($$,$1); addlist($$, $3);}
+    args_decleration args {$$ = mknode("ARGS"); addlist($$,$1);}
+    |args_decleration SEMICOLON {$$ = mknode("ARGS"); addlist($$,$1);}
+    |args_decleration SEMICOLON args_decleration {$$ = mknode("ARGS"); addlist($$,$1); addlist($$, $3);}
     |%empty {$$ = mknode("ARGS NONE");}
     ;
 
 declerations:
-    declerations var_decleration
-    | var_decleration
-    |declerations string_decleration
+    declerations var_decleration {$$ = integrate("fd",$1,$2);}
+    |var_decleration
+    |declerations string_decleration {$$ = integrate("fd",$1,$2);}
     |string_decleration
+    ;
 
 var_decleration:
-    var_decleration VAR params_decleration SEMICOLON {$$ = combine("fd",$1,$3);}
-    |VAR params_decleration SEMICOLON {$$ = $2;}
-    |STRING string_decleration SEMICOLON {$$ = mknode("STRING"); addNode(&$$, $2);}
+    VAR params_decleration SEMICOLON {$$ = $2;}
     ;
 
 string_decleration:
-    id LEFTBRACKET int_exp RIGHTBRACKET COMMA string_decleration {$$ = $1; addNode(&$$,$3); addNode(&$$,$6);}
-    | id LEFTBRACKET int_exp RIGHTBRACKET {$$ = $1; addNode(&$$,$3);}
-    | id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string {$$ = mknode("="); addNode(&$$,$1); addNode(&$1,$3); addNode(&$$, $6);}
-    | id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string COMMA string_decleration {$$ = mknode("="); addNode(&$$,$1); addNode(&$1,$3); addNode(&$$, $6); addNode(&$$, $8);}
+    STRING string_params SEMICOLON {$$ = mknode("s"); node* s = mknode("STRING"); addlist(s,$2); addNode(&$$,s);}
+    ;
+
+string_params:
+    id LEFTBRACKET int_exp RIGHTBRACKET {$$ = mknode("s"); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&$$,$1);}
+    |id LEFTBRACKET int_exp RIGHTBRACKET COMMA string_params {$$ = mknode("s"); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&$$,$1); addlist($$,$6);}
+    |id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6);addNode(&$$,ass);}
+    |id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string COMMA string_params {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6);addNode(&$$,ass); addlist($$,$8);}
+    ; 
+
+args_decleration:
+    var_type params {$$ = mknode("s"); node* s = $1; mknodelist(s, $2); addNode(&$$,s);}
     ;
 
 params_decleration:
-    var_type params {$$ = mknode("s"); node* s = $1; mknodelist(s, $2); addNode(&$$,s);}
+    var_type variables {$$ = mknode("s"); node* s = $1; addlist(s,$2); addNode(&$$,s);}
+    ;
+
+variables:
+    id 
+    |id COMMA variables {$$ = mknode("s"); addNode(&$$,$1); addlist($$,$3);}
+    |id ASSIGNMENT expression {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
+    |id ASSIGNMENT expression COMMA variables {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addNode(&s,$3); addNode(&$$,s); addlist($$,$5);}
     ;
 
 params:
@@ -222,7 +247,7 @@ params:
     ;
 
 csnull: 
-    CSNULL  { $$ = mknode (yytext, NULL, NULL, NULL);}
+    CSNULL  { $$ = mknode (yytext);}
     ;
 
 string:

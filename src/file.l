@@ -62,8 +62,9 @@
 [-+]?[0-9][0-9]*\.[0-9][0-9]* return REAL_D;
 \'.\' return CHARACTER;
 0(x|X)[0-9A-F]+ return HEX;
-"\""[a-zA-z0-9][A-z]"\"" return STR;
-"/*"((\*+[^/*])|([^*]))*\**"*/" return COMMENTS;
+"\""[a-zA-z0-9][A-z]*"\"" return STR;
+"/*"([^*]|\*+[^*/])*\*+"/"
+\|[a-zA-Z][a-zA-Z0-9_]*\| return SIZE;
 \n  linecount++;
 [ \t\r] ;
 . return yytext[0];

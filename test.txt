@@ -1,4 +1,11 @@
-function void main(){
-    string p[0] = "jj";
-    g = g;
+function int* foo (int* x,y; char* z){
+    var real* b = null;
+    x = g;
+    return 0;
 }
+
+function void main(){
+    x = 6;
+}
+
+

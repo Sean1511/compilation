@@ -57,7 +57,7 @@ void mknodelist(node* father, node* son) {
 	}
 }
 
-node* combine(char* token, node* one, node* two) {
+node* integrate(char* token, node* one, node* two) {
 	int i = 0, j = 0;
 	node* new = (node*)malloc(sizeof(node));
 	new->token = strdup(token);

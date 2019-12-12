@@ -5,7 +5,7 @@ all:
 
 git:
 	git config --global user.name "Sean1511"
-	git commit -am "great work"
+	git commit -am "part 1 final"
 	git push -u origin master
 	
 run:
