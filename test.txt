@@ -1,11 +1,16 @@
-function int* foo (int* x,y; char* z){
-    var real* b = null;
-    x = g;
-    return 0;
+function void stmt(){
+	if(3 > 2)
+	{
+		/*...statements...*/
+		i = 5; /* i has been declared above */
+	}
+		/* more examples … */
+	if(true) { j = 3; } else { k = 4; }
+	while(true) { l = 2; k = l + j; }
+	if(true) i = 5;
+	if(true) { j = 3; } else x = x - 1;
+	while(false) x = x + 1;
+	do {a = a + i; i= i + 1;} while (i<=10);
 }
 
-function void main(){
-    x = 6;
-}
-
-
+function void main(){}
