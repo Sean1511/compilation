@@ -38,7 +38,7 @@ Main:
 
 functions:
     functions function {$$ = integrate("sean", $1, $2);}
-    | function
+    |function
     ;
 
 function: 
