@@ -12,7 +12,6 @@ int yyerror(char *s);
 %token IF ELSE WHILE FOR DO
 %token GREATER PLUS ASSIGNMENT COMMA DIVISION AND EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE
 %token SEMICOLON LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES COLON 
-%expect 1
 %nonassoc XIF
 %nonassoc ELSE
 %nonassoc AND OR
@@ -183,7 +182,7 @@ logical_exp:
     | expression NOTEQUAL expression { $$ = mknode ("!="); addNode(&$$,$1); addNode(&$$, $3);}
     | NOT expression {$$ = mknode ("NOT"); addNode(&$$,$2);}
     | LEFTPAREN logical_exp RIGHTPAREN {$$ = $2;} 
-    | expression
+    | expression %prec XIF
     ;
 
 block:

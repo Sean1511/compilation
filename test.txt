@@ -1,16 +1,10 @@
-function void stmt(){
-	if(3 > 2)
+function void goo(int i, j, k)
+{
+	function bool fee(int l, m, n)
 	{
-		/*...statements...*/
-		i = 5; /* i has been declared above */
+		return true;
 	}
-		/* more examples … */
-	if(true) { j = 3; } else { k = 4; }
-	while(true) { l = 2; k = l + j; }
-	if(true) i = 5;
-	if(true) { j = 3; } else x = x - 1;
-	while(false) x = x + 1;
-	do {a = a + i; i= i + 1;} while (i<=10);
+	fee(2,3,4);
 }
 
 function void main(){}
