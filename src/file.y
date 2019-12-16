@@ -8,17 +8,17 @@ int yylex(void);
 int yyerror(char *s);
 %}
 %token FUNCTION VOID RETURN MAIN
-%token INT REAL ID INTEGER CHAR BOOL INTPTR CHARPTR REALPTR STRING BOOLTRUE BOOLFALSE CSNULL REAL_D CHARACTER HEX STR VAR SIZE   
+%token INT REAL ID INTEGER CHAR BOOL INTPTR CHARPTR REALPTR STRING BOOLTRUE BOOLFALSE CSNULL REAL_D CHARACTER HEX STR VAR SIZE 
 %token IF ELSE WHILE FOR DO
 %token GREATER PLUS ASSIGNMENT COMMA DIVISION AND EQUAL GREATEREQUAL LESS LESSEQUAL MINUS NOT NOTEQUAL OR MULTI ADDRESS DEREFERENCE ABSUOLUTE
 %token SEMICOLON LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES COLON 
 %nonassoc XIF
 %nonassoc ELSE
-%nonassoc AND OR
 %right ASSIGNMENT NOT SEMICOLON MAIN
 %left LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN
+%left AND OR
 %left EQUAL GREATER GREATEREQUAL LESSEQUAL LESS NOTEQUAL 
-%left MINUS PLUS 
+%left MINUS PLUS
 %left MULTI DIVISION
 %start s
 
@@ -37,7 +37,7 @@ Main:
     ;
 
 functions:
-    functions function {$$ = integrate("sean", $1, $2);}
+    functions function {$$ = integrate("", $1, $2);}
     |function
     ;
 
@@ -90,11 +90,11 @@ statment:
     ;
 
 if_statment:
-    IF LEFTPAREN condition RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("IF"); addNode(&s, $3); addlist(s,$5);addNode(&$$,s);}  %prec XIF
+    IF LEFTPAREN expression RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("IF"); addNode(&s, $3); addlist(s,$5);addNode(&$$,s);}  %prec XIF
     ;
 
 if_else_statment:
-    IF LEFTPAREN condition RIGHTPAREN statment ELSE statment {$$ = mknode("s"); node* s = mknode("IF-ELSE"); addNode(&s, $3); addlist(s,$5); addlist(s, $7); addNode(&$$,s);}
+    IF LEFTPAREN expression RIGHTPAREN statment ELSE statment {$$ = mknode("s"); node* s = mknode("IF-ELSE"); addNode(&s, $3); addlist(s,$5); addlist(s, $7); addNode(&$$,s);}
     ;
 
 loop_statment: 
@@ -104,14 +104,14 @@ loop_statment:
     ;
 
 for:
-    FOR LEFTPAREN stat_assignment SEMICOLON logical_exp SEMICOLON stat_assignment RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("FOR"); addlist(s, $3); addNode(&s, $5); addlist(s, $7); addlist(s, $9); addNode(&$$,s);}
+    FOR LEFTPAREN stat_assignment SEMICOLON expression SEMICOLON stat_assignment RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("FOR"); addlist(s, $3); addNode(&s, $5); addlist(s, $7); addlist(s, $9); addNode(&$$,s);}
 
 while:
-    WHILE LEFTPAREN condition RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("WHILE"); addNode(&s, $3); addlist(s, $5); addNode(&$$,s);}
+    WHILE LEFTPAREN expression RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("WHILE"); addNode(&s, $3); addlist(s, $5); addNode(&$$,s);}
     ;
 
 do_while:
-    DO block WHILE LEFTPAREN condition RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode("DO-WHILE"); addlist(s, $2); addNode(&s, $5); addNode(&$$,s);}
+    DO block WHILE LEFTPAREN expression RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode("DO-WHILE"); addlist(s, $2); addNode(&s, $5); addNode(&$$,s);}
 
 stat_assignment:
     id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
@@ -126,17 +126,28 @@ expression:
     | expression MINUS expression {$$ = mknode("-"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression MULTI expression {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression DIVISION expression {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression EQUAL expression { $$ = mknode ("=="); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression GREATER expression { $$ = mknode (">"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression GREATEREQUAL expression { $$ = mknode (">="); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression LESS expression { $$ = mknode ("<"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression LESSEQUAL expression { $$ = mknode ("<="); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression NOTEQUAL expression { $$ = mknode ("!="); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression AND expression {$$ = mknode("&&"); addNode(&$$,$1); addNode(&$$,$3);} 
+    | expression OR expression {$$ = mknode("||"); addNode(&$$,$1); addNode(&$$,$3);} 
+    | NOT expression {$$ = mknode ("NOT"); addNode(&$$,$2);}
     | LEFTPAREN expression RIGHTPAREN {$$ = $2;}
     | INTEGER {$$ = mknode(yytext);}
     | HEX {$$ = mknode(yytext);}
     | REAL_D {$$ = mknode(yytext);}
     | SIZE {$$ = mknode(yytext);}
     | ADDRESS id {char* t = $2->token; char *s = malloc(strlen(t)+strlen("&")+1); strcat (s,"&"); strcat(s,t); $$ = mknode(s);}
+    | string_id 
     | true 
     | false 
     | csnull
     | id
     | char
+    | string
     ;
 
 int_exp:
@@ -165,24 +176,6 @@ func_params:
 func:
     expression COMMA {$$ = mknode("s"); addNode(&$$,$1);}
     | expression {$$ = mknode("s"); addNode(&$$,$1);}
-    ;
-
-condition:
-    logical_exp AND condition {$$ = mknode("&&"); addNode(&$$,$1); addNode(&$$,$3); } %prec AND
-    |logical_exp OR condition {$$ = mknode("||"); addNode(&$$,$1); addNode(&$$,$3); } %prec OR
-    |logical_exp
-    ;
-
-logical_exp:
-    expression EQUAL expression { $$ = mknode ("=="); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression GREATER expression { $$ = mknode (">"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression GREATEREQUAL expression { $$ = mknode (">="); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression LESS expression { $$ = mknode ("<"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression LESSEQUAL expression { $$ = mknode ("<="); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression NOTEQUAL expression { $$ = mknode ("!="); addNode(&$$,$1); addNode(&$$, $3);}
-    | NOT expression {$$ = mknode ("NOT"); addNode(&$$,$2);}
-    | LEFTPAREN logical_exp RIGHTPAREN {$$ = $2;} 
-    | expression %prec XIF
     ;
 
 block:
@@ -264,6 +257,9 @@ params:
     id COMMA params {addNode(&$1,$3);}
     |id 
     ;
+
+string_id:
+    id LEFTBRACKET expression RIGHTBRACKET {$$ = $1; node* index = mknode("INDEX"); addNode(&index,$3); addNode(&$$, index);}
 
 csnull: 
     CSNULL  { $$ = mknode (yytext);}

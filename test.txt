@@ -1,12 +1,22 @@
-function void decstr(){
-	string a[30], b[100] = "moshe";
-	var char c;
-	var int i;
-	c = 'e';
-	a[19] = 'f';
-	a[4 + 2] = 'g';
-	b = a;
-	i = |b|; /* this assigns 100 to variable i, since the length operator returns the size of the character array */
+function void fee1(int i, j, k, x)
+{
+    function bool fee2(int l, m, n)
+    {
+	var bool x, j; /* declarations */
+	var char k;
+	k = '@'; /* statements */
+	i = l + l;
+	if ((k == '*') || (x != false) && (l + m < i)){ 
+		x = l < m;
+	}
+        return x;
+    }
+    {
+	var char x;
+	var bool k;
+	k = fee2(5,i,j);
+     }
+    x = k;
 }
 
 function void main(){}
