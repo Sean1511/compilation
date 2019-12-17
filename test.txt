@@ -1,22 +1,23 @@
-function void fee1(int i, j, k, x)
+function int foo4()
 {
-    function bool fee2(int l, m, n)
-    {
-	var bool x, j; /* declarations */
-	var char k;
-	k = '@'; /* statements */
-	i = l + l;
-	if ((k == '*') || (x != false) && (l + m < i)){ 
-		x = l < m;
+    {   
+	var int x;
+	var int* y;
+	x = 5;
+	y = &x;
+	x = 6;
+	if (&x == y && *y == x)
+		*y = 9;
+     	{
+		var char* x;
+		string y[10];
+		var char z;
+		y = "foobar";
+		z = *(x - 5);       
+		y = "barfoo"; 
 	}
-        return x;
-    }
-    {
-	var char x;
-	var bool k;
-	k = fee2(5,i,j);
      }
-    x = k;
+    return 0;
 }
 
 function void main(){}
