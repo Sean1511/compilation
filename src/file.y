@@ -14,7 +14,6 @@ int yyerror(char *s);
 %token SEMICOLON LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN LEFTBRACKET RIGHTBRACKET PERCENT QUOTES DOUBLEQUOTES COLON 
 %nonassoc XIF
 %nonassoc ELSE
-%nonassoc PTR
 %right ASSIGNMENT NOT SEMICOLON MAIN
 %left LEFTBRACE RIGHTBRACE LEFTPAREN RIGHTPAREN
 %left AND OR
@@ -116,6 +115,7 @@ do_while:
 
 stat_assignment:
     id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
+    |id ASSIGNMENT MULTI expression {$$ = mknode("s"); node* s = mknode("="); node* ptr = mknode("*"); addNode(&s,$1); addNode(&ptr,$4); addNode(&s,ptr); addNode(&$$,s);}
     ;
 
 string_assignment:
@@ -142,7 +142,7 @@ expression:
     | REAL_D {$$ = mknode(yytext);}
     | SIZE {$$ = mknode(yytext);}
     | ADDRESS id {char* t = $2->token; char *s = malloc(strlen(t)+strlen("&")+1); strcat (s,"&"); strcat(s,t); $$ = mknode(s);}
-    | '*' expression %prec PTR
+    | ADDRESS string_id {char* t = $2->token; char *s = malloc(strlen(t)+strlen("&")+1); strcat (s,"&"); strcat(s,t); $2->token = s; $$ = $2;}
     | string_id 
     | true 
     | false 
