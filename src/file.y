@@ -24,7 +24,7 @@ int yyerror(char *s);
 
 %%
 s:
-    code {printtree($1, 0);}
+    code {semanticAnalysis($1);}
     ;
 
 code:
@@ -125,7 +125,7 @@ string_assignment:
 expression:
     expression PLUS expression {$$ = mknode("+"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression MINUS expression {$$ = mknode("-"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression MULTI expression {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);}
+    | expression MULTI expression {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);} 
     | expression DIVISION expression {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
     | expression EQUAL expression { $$ = mknode ("=="); addNode(&$$,$1); addNode(&$$, $3);}
     | expression GREATER expression { $$ = mknode (">"); addNode(&$$,$1); addNode(&$$, $3);}

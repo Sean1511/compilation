@@ -1662,7 +1662,7 @@ yyreduce:
     {
         case 2:
 #line 27 "src/file.y" /* yacc.c:1646  */
-    {printtree((yyvsp[0]), 0);}
+    {semanticAnalysis((yyvsp[0]));}
 #line 1667 "y.tab.c" /* yacc.c:1646  */
     break;
 
