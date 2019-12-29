@@ -48,6 +48,7 @@ node* mknode(char* token) {
 	strcpy(newstr, token);
 	newnode->token = newstr;
 	newnode->nodes = NULL;
+	newnode->val_type = NULL;
 	newnode->count = 0;
 	return newnode;
 }
@@ -103,6 +104,8 @@ void addlist(node* root, node* arr){
 
 void semanticAnalysis(node* root){
 	pushStat(root, 1);
+
+	isSymbolExist(topStack);
 	printInfo(root);
 }
 
@@ -119,28 +122,30 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "IF" ,NULL, root->nodes[1]->nodes, level, root->nodes[1]->count);
 	}
 
+	if(!strcmp(root->token,"FUNCTION")){
+        level++;
+        pushScopeToStack(&topStack,"FUNCTION",root->nodes[1], root->nodes[3]->nodes, level, root->nodes[3]->count);
+        //isReturnTypeMatch(tNode);
+	}
+
 	for (int i = 0; i < root->count; i++){
 		pushStat(root->nodes[i], level);
 	}
 }
 
-void pushScopeToStack(scopeNode** top, char* name, node* params, node** statements, int level, int size){      
-    //if(strcmp(scopeName,"DECLARE"))//*******************************************************************צריך לבדוק
+void pushScopeToStack(scopeNode** top, char* name, node* params, node** statements, int level, int stat_size){      
 	scopeNode* new_scope = (scopeNode*) malloc(sizeof(scopeNode));
-
 	new_scope->scopeName = (char*)(malloc (sizeof(name) + 1));
 	strncpy(new_scope->scopeName, name, sizeof(name)+1);
 	SCOPE_NUM++;
 	new_scope->scopeNum=SCOPE_NUM;
 	new_scope->scopeLevel=level-1;
-
-	// if (params){
-	// 	pushSignatureParamsToTable(&new_scope, params);
-	// }
-	
 	new_scope->next = (*top);
 	(*top) = new_scope;
-	pushScopeStatements(statements, size);
+	if (params){
+		pushSymbols(params);
+	}
+	pushScopeStatements(statements, stat_size);
 }
 
 void pushScopeStatements(node** statements, int size){
@@ -148,13 +153,20 @@ void pushScopeStatements(node** statements, int size){
 		if(!strcmp(statements[i]->token, "VAR")){
 			pushSymbols(statements[i]);
 		}
+		else if (!strcmp(statements[i]->token, "FUNCTION")){
+			pushToTable(&topStack,statements[i]->nodes[0]->token, statements[i]->nodes[2]->token,NULL,1, statements[i]->nodes[1]);
+		}
 		else if(!strcmp(statements[i]->token, "=")){
         	if (isDeclared(statements[i]->nodes[0]->token)){ // אולי לא צריך את הפונקציה הנל
                 char *left = scopeSearch(statements[i]->nodes[0]->token)->type;
                 char *right = EvaluateExp(statements[i]->nodes[1]);
-            	if (strcmp(right,left))
-                    printf("Assignment Error mismatch: cannot assign %s to %s\n", left, right);
+            	if (strcmp(right,left) && strcmp(right,""))
+                    printf("Assignment Error mismatch: cannot assign %s to %s\n", right, left);
 			}
+		}
+
+		else if (!strcmp(statements[i]->token, "FUNC_CALL")){
+			checkFunctionCall(statements[i]->nodes[0]->token, statements[i]->nodes[1]);
 		}
 	}
 }
@@ -174,7 +186,7 @@ void pushNodesToSymtable(char* type, node** vars, int size){
 	}
 }
 
-void pushToTable(scopeNode** top, char* id, char* type, char* data, int isFunc, node* params){ // פראמס צריך להיות** אולי
+void pushToTable(scopeNode** top, char* id, char* type, char* data, int isFunc, node* params){
 	symbolNode* new_node = (symbolNode*) malloc(sizeof(symbolNode));
 	new_node->isFunc = isFunc;
 	new_node->id = (char*)(malloc (sizeof(id) + 1));
@@ -232,21 +244,95 @@ symbolNode* scopeSearch(char* id){
 	return NULL;
 }
 
+int checkFunctionCall(char *funcName, node *callArgs){
+    symbolNode *funcSymbol = scopeSearch(funcName);
+	if (funcSymbol !=NULL)
+		if (checkFunctionArgs(funcSymbol->params, callArgs))
+			return 1;
+    printf ("no procedure was defined with arguements matching called function (%s)\n", funcName);
+    return 0; 
+}
+
+int checkFunctionArgs(node* params, node* callArgs){
+	if (!strcmp(params->token,"ARGS_NONE") && !strcmp(callArgs->token,"ARGS_NONE"))
+		return 1;
+	int count = 0;
+	for (int i = 0;i<params->count;i++)
+		count += params->nodes[i]->count;
+	if(count != callArgs->count)
+		return 0;
+	int k = 0;
+	for (int i = 0;i<params->count;i++){
+		for(int j = 0; j < params->nodes[i]->count;j++){
+			if (strcmp(params->nodes[i]->token, EvaluateExp(callArgs->nodes[k++])))
+				return 0;
+		}
+	}
+	return 1;
+}
+
 char* EvaluateExp(node* exp){
-	if (isNumeric(exp->token)){
-		return "INT";
+	if (exp->val_type != NULL && !strcmp(exp->val_type, "ID")){
+		symbolNode* node = scopeSearch(exp->token);
+		if(node != NULL)
+            return node->type;
+        else{
+			printf("Undeclared variable [%s]\n", exp->token);
+            return "NULL";
+		}
+	}
+
+	else if (exp->val_type != NULL)
+		return exp->val_type;
+
+	else if (!strcmp(exp->token,"+")||!strcmp(exp->token,"-")||!strcmp(exp->token,"*")||!strcmp(exp->token,"/")){
+		char* left, *right;
+        left = EvaluateExp(exp->nodes[0]);
+        right = EvaluateExp(exp->nodes[1]);
+		if (!strcmp(left, "NULL") || !strcmp(right,"NULL"))
+			return "";
+        if (!strcmp(left,"INT") && !strcmp(right,"INT"))
+			return "INT";
+		else if (!strcmp(left,"REAL") && !strcmp(right,"REAL"))
+			return "REAL";
+		else if ((!strcmp(left,"REAL") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"REAL")))
+			return "REAL";
+		else {
+			printf("Can not perform [%s] between [%s] and [%s]\n", exp->token, left, right);
+		}
 	}
 	return "";
 }
 
-int isNumeric(char* exp){
-	int len = strlen(exp);
-	for (int i = 0;i<len;i++){
-		if(!isdigit(exp[i])){
-			return 0;
-		}
-	}
-	return 1;
+int isSymbolExist(scopeNode* scope){
+    scopeNode * current = scope;
+    while(current != NULL){
+        checkSymbols(current);
+        current=current->next;
+    }
+    return 1;
+}
+
+int checkSymbols(scopeNode* scope)
+{
+    symbolNode* s1 = scope->symbolTable;
+    symbolNode* s2;
+  while(s1!= NULL){
+        s2 = s1->next;
+        while (s2 != NULL)
+        {
+            if (!strcmp(s1->id, s2->id)){
+                if (s1->isFunc)
+                    printf ("scope [%s] level[%d]: re-declaration of function (%s)\n", scope->scopeName, scope->scopeLevel, s1->id);
+                else
+                    printf ("scope [%s] level[%d]: re-declaration of variable (%s)\n", scope->scopeName, scope->scopeLevel, s1->id);
+                return 0;
+                }
+            s2 =s2->next;
+        }
+        s1 =s1->next;
+    }
+    return 1;
 }
 
 void printInfo(node *root){

@@ -47,7 +47,7 @@ function:
     ;
 
 void_func: 
-    FUNCTION func_type id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); addNode(&s,$3); addNode(&s,$5); addNode(&s, $2); addNode(&s, $7); addNode(&$$,s);}
+    FUNCTION VOID id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); node* v = mknode("TYPE VOID"); addNode(&s,$3); addNode(&s,$5); addNode(&s, v); addNode(&s, $7); addNode(&$$,s);}
     ; 
 
 value_func: 
@@ -137,12 +137,12 @@ expression:
     | expression OR expression {$$ = mknode("||"); addNode(&$$,$1); addNode(&$$,$3);} 
     | NOT expression {$$ = mknode ("NOT"); addNode(&$$,$2);}
     | LEFTPAREN expression RIGHTPAREN {$$ = $2;}
-    | INTEGER {$$ = mknode(yytext);}
-    | HEX {$$ = mknode(yytext);}
-    | REAL_D {$$ = mknode(yytext);}
     | SIZE {$$ = mknode(yytext);}
     | ADDRESS id {char* t = $2->token; char *s = malloc(strlen(t)+strlen("&")+1); strcat (s,"&"); strcat(s,t); $$ = mknode(s);}
     | ADDRESS string_id {char* t = $2->token; char *s = malloc(strlen(t)+strlen("&")+1); strcat (s,"&"); strcat(s,t); $2->token = s; $$ = $2;}
+    | int
+    | hex
+    | real
     | string_id 
     | true 
     | false 
@@ -158,16 +158,15 @@ int_exp:
     | int_exp MULTI int_exp {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);}
     | int_exp DIVISION int_exp {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
     | LEFTPAREN int_exp RIGHTPAREN {$$ = $2;} 
-    | INTEGER {$$ = mknode(yytext);}
-    | HEX {$$ = mknode(yytext);}
+    | int
     | id
     ;
 
 func_call: 
     id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("FUNC_CALL"); addNode(&s,$1); node* args = mknode("ARGS"); addlist(args, $3); addNode(&s, args); addNode(&$$,s);}
-    |id ASSIGNMENT id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); node* args = mknode("ARGS"); addlist(args, $5); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
+    |id ASSIGNMENT id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); addNode(&call,$3); node* args = mknode("ARGS"); addlist(args, $5); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
     |id LEFTPAREN RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("FUNC_CALL"); addNode(&s,$1); node* args = mknode("ARGS NONE"); addNode(&s, args); addNode(&$$,s);}
-    |id ASSIGNMENT id LEFTPAREN RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); node* args = mknode("ARGS NONE"); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
+    |id ASSIGNMENT id LEFTPAREN RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); addNode(&call,$3); node* args = mknode("ARGS NONE"); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
     ; 
 
 func_params:
@@ -192,8 +191,7 @@ block:
     ;   
 
 func_type:
-    VOID {$$ = mknode ("TYPE VOID");}
-    |INT {$$ = mknode ("TYPE INT");}
+    INT {$$ = mknode ("TYPE INT");}
     |REAL {$$ = mknode ("TYPE REAL");} 
     |CHAR {$$ = mknode ("TYPE CHAR");}
     |BOOL {$$ = mknode ("TYPE BOOL");}
@@ -264,25 +262,39 @@ string_id:
     id LEFTBRACKET expression RIGHTBRACKET {$$ = $1; node* index = mknode("INDEX"); addNode(&index,$3); addNode(&$$, index);}
 
 csnull: 
-    CSNULL  { $$ = mknode (yytext);}
+    CSNULL  { $$ = mknode (yytext); $$->val_type = "NULL";}
     ;
 
 string:
-    STR {$$ = mknode(yytext);}
+    STR {$$ = mknode(yytext); $$->val_type = "STRING";}
     ;
 
 char:
-    CHARACTER {$$ = mknode(yytext);}
+    CHARACTER {$$ = mknode(yytext); $$->val_type = "CHAR";}
+    ;
+
+int:
+    INTEGER {$$ = mknode(yytext); $$->val_type = "INT";}
+    ;
+
+real:
+    REAL_D {$$ = mknode(yytext); $$->val_type = "REAL";}
+    ;
+
+hex:
+    HEX {$$ = mknode(yytext); $$->val_type = "HEX";}
     ;
 
 true:
-    BOOLTRUE {$$ = mknode(yytext);}
+    BOOLTRUE {$$ = mknode(yytext); $$->val_type = "BOOL";}
+    ;
 
 false:
-    BOOLFALSE {$$ = mknode(yytext);}
+    BOOLFALSE {$$ = mknode(yytext); $$->val_type = "BOOL";}
+    ;
 
 id: 
-    ID {$$ = mknode(yytext);}
+    ID {$$ = mknode(yytext); $$->val_type = "ID";}
     ;
 
 %%
