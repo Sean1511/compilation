@@ -47,7 +47,7 @@ function:
     ;
 
 void_func: 
-    FUNCTION VOID id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); node* v = mknode("TYPE VOID"); addNode(&s,$3); addNode(&s,$5); addNode(&s, v); addNode(&s, $7); addNode(&$$,s);}
+    FUNCTION VOID id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); node* v = mknode("VOID"); addNode(&s,$3); addNode(&s,$5); addNode(&s, v); addNode(&s, $7); addNode(&$$,s);}
     ; 
 
 value_func: 
@@ -87,6 +87,8 @@ statment:
     |loop_statment
     |block 
     |func_call SEMICOLON
+    |RETURN expression SEMICOLON {$$ = mknode("s"); node* s = mknode("RET"); addNode(&s, $2); addNode(&$$, s);}
+    |RETURN SEMICOLON {$$ = mknode("s"); node* s = mknode("RET"); addNode(&$$, s);}
     ;
 
 if_statment:
@@ -119,7 +121,7 @@ stat_assignment:
     ;
 
 string_assignment:
-    id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT char {$$ = mknode("s"); node* s = mknode("="); node* index = mknode("INDEX"); addNode(&index,$3); addNode(&$1, index); addNode(&s, $1); addNode(&s,$6); addNode(&$$,s);}
+    id LEFTBRACKET expression RIGHTBRACKET ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); node* index = mknode("INDEX"); addNode(&index,$3); addNode(&$1, index); addNode(&s, $1); addNode(&s,$6); addNode(&$$,s);}
     ;
 
 expression:
@@ -152,16 +154,6 @@ expression:
     | string
     ;
 
-int_exp:
-    int_exp PLUS int_exp {$$ = mknode("+"); addNode(&$$,$1); addNode(&$$, $3);}
-    | int_exp MINUS int_exp {$$ = mknode("-"); addNode(&$$,$1); addNode(&$$, $3);}
-    | int_exp MULTI int_exp {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);}
-    | int_exp DIVISION int_exp {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
-    | LEFTPAREN int_exp RIGHTPAREN {$$ = $2;} 
-    | int
-    | id
-    ;
-
 func_call: 
     id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("FUNC_CALL"); addNode(&s,$1); node* args = mknode("ARGS"); addlist(args, $3); addNode(&s, args); addNode(&$$,s);}
     |id ASSIGNMENT id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); addNode(&call,$3); node* args = mknode("ARGS"); addlist(args, $5); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
@@ -191,13 +183,13 @@ block:
     ;   
 
 func_type:
-    INT {$$ = mknode ("TYPE INT");}
-    |REAL {$$ = mknode ("TYPE REAL");} 
-    |CHAR {$$ = mknode ("TYPE CHAR");}
-    |BOOL {$$ = mknode ("TYPE BOOL");}
-    |INTPTR {$$ = mknode ("TYPE INT*");}
-    |CHARPTR {$$ = mknode ("TYPE CHAR*");}
-    |REALPTR {$$ = mknode ("TYPE REAL*");}
+    INT {$$ = mknode ("INT");}
+    |REAL {$$ = mknode ("REAL");} 
+    |CHAR {$$ = mknode ("CHAR");}
+    |BOOL {$$ = mknode ("BOOL");}
+    |INTPTR {$$ = mknode ("INT*");}
+    |CHARPTR {$$ = mknode ("CHAR*");}
+    |REALPTR {$$ = mknode ("REAL*");}
     ;
 
 var_type:  
@@ -232,10 +224,10 @@ string_decleration:
     ;
 
 string_params:
-    id LEFTBRACKET int_exp RIGHTBRACKET {$$ = mknode("s"); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&$$,$1);}
-    |id LEFTBRACKET int_exp RIGHTBRACKET COMMA string_params {$$ = mknode("s"); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&$$,$1); addlist($$,$6);}
-    |id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6);addNode(&$$,ass);}
-    |id LEFTBRACKET int_exp RIGHTBRACKET ASSIGNMENT string COMMA string_params {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6);addNode(&$$,ass); addlist($$,$8);}
+    id LEFTBRACKET expression RIGHTBRACKET {$$ = mknode("s"); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&$$,$1);}
+    |id LEFTBRACKET expression RIGHTBRACKET COMMA string_params {$$ = mknode("s"); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&$$,$1); addlist($$,$6);}
+    |id LEFTBRACKET expression RIGHTBRACKET ASSIGNMENT expression {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6);addNode(&$$,ass);}
+    |id LEFTBRACKET expression RIGHTBRACKET ASSIGNMENT expression COMMA string_params {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6);addNode(&$$,ass); addlist($$,$8);}
     ; 
 
 args_decleration:
@@ -251,6 +243,8 @@ variables:
     |id COMMA variables {$$ = mknode("s"); addNode(&$$,$1); addlist($$,$3);}
     |id ASSIGNMENT expression {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
     |id ASSIGNMENT expression COMMA variables {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addNode(&s,$3); addNode(&$$,s); addlist($$,$5);}
+    |id ASSIGNMENT func_call {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addlist(s,$3); addNode(&$$,s);}
+    |id ASSIGNMENT func_call COMMA variables {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addlist(s,$3); addNode(&$$,s); addlist($$,$5);}
     ;
 
 params:

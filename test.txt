@@ -1,13 +1,7 @@
-function void foo(){
-	function char goo(int x,y,z){
-		var int hadar = 4;
-		if (x > 0){
-			return 7;
-		}
-		return 0;
-	}
-	too(2, 3);
+function int goo(){
+	var bool x = 5 > 3;
+	x[0] = 5;
+	return 1;
 }
 
-function void main(){
-}
+function void main(){}

@@ -47,11 +47,14 @@ int isDeclared(char* id);
 symbolNode* symbolSearch (symbolNode* symTable, char* id);
 symbolNode* scopeSearch(char* id);
 char* EvaluateExp(node* exp);
+int checkFuncReturn(node *funcNode);
+int evalReturn(node* funcNode, char* type);
 
 int isSymbolExist(scopeNode* scope);
 int checkSymbols(scopeNode* scope);
 int checkFunctionCall(char *funcName, node *args);
 int checkFunctionArgs(node* params, node* callArgs);
+void checkString(node* strNode, char* assType);
 
 void printScopes(struct scopeNode *node);
 void printSymbolTable(struct scopeNode *node);
