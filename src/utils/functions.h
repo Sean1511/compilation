@@ -6,6 +6,8 @@ typedef struct node {
 	int count;
 	struct node** nodes;
 	char* val_type;
+	int line;
+	char* father;
 } node;
 
 typedef struct symbolNode{

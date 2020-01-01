@@ -92,11 +92,11 @@ statment:
     ;
 
 if_statment:
-    IF LEFTPAREN expression RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("IF"); addNode(&s, $3); addlist(s,$5);addNode(&$$,s);}  %prec XIF
+    IF LEFTPAREN expression RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("IF"); s->line = $3->line; addNode(&s, $3);  addlist(s,$5); s->nodes[1]->father = "IF"; addNode(&$$,s);}  %prec XIF
     ;
 
 if_else_statment:
-    IF LEFTPAREN expression RIGHTPAREN statment ELSE statment {$$ = mknode("s"); node* s = mknode("IF-ELSE"); addNode(&s, $3); addlist(s,$5); addlist(s, $7); addNode(&$$,s);}
+    IF LEFTPAREN expression RIGHTPAREN statment ELSE statment {$$ = mknode("s"); node* s = mknode("IF-ELSE"); addNode(&s, $3); addlist(s,$5); s->nodes[1]->father = "IF"; addlist(s, $7); addNode(&$$,s);}
     ;
 
 loop_statment: 
@@ -106,18 +106,17 @@ loop_statment:
     ;
 
 for:
-    FOR LEFTPAREN stat_assignment SEMICOLON expression SEMICOLON stat_assignment RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("FOR"); addlist(s, $3); addNode(&s, $5); addlist(s, $7); addlist(s, $9); addNode(&$$,s);}
+    FOR LEFTPAREN stat_assignment SEMICOLON expression SEMICOLON stat_assignment RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("FOR"); s->line = $3->line; addlist(s, $3); addNode(&s, $5); addlist(s, $7); addlist(s, $9); s->nodes[3]->father = "FOR"; addNode(&$$,s);}
 
 while:
-    WHILE LEFTPAREN expression RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("WHILE"); addNode(&s, $3); addlist(s, $5); addNode(&$$,s);}
+    WHILE LEFTPAREN expression RIGHTPAREN statment {$$ = mknode("s"); node* s = mknode("WHILE"); s->line = $3->line; addNode(&s, $3); addlist(s, $5); s->nodes[1]->father = "WHILE"; addNode(&$$,s);}
     ;
 
 do_while:
-    DO block WHILE LEFTPAREN expression RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode("DO-WHILE"); addlist(s, $2); addNode(&s, $5); addNode(&$$,s);}
+    DO block WHILE LEFTPAREN expression RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode("DO-WHILE"); s->line = $5->line; addlist(s, $2); s->nodes[0]->father = "DO-WHILE"; addNode(&s, $5); addNode(&$$,s);}
 
 stat_assignment:
-    id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
-    |id ASSIGNMENT MULTI expression {$$ = mknode("s"); node* s = mknode("="); node* ptr = mknode("*"); addNode(&s,$1); addNode(&ptr,$4); addNode(&s,ptr); addNode(&$$,s);}
+    id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
     ;
 
 string_assignment:
@@ -139,9 +138,9 @@ expression:
     | expression OR expression {$$ = mknode("||"); addNode(&$$,$1); addNode(&$$,$3);} 
     | NOT expression {$$ = mknode ("NOT"); addNode(&$$,$2);}
     | LEFTPAREN expression RIGHTPAREN {$$ = $2;}
-    | SIZE {$$ = mknode(yytext);}
-    | ADDRESS id {char* t = $2->token; char *s = malloc(strlen(t)+strlen("&")+1); strcat (s,"&"); strcat(s,t); $$ = mknode(s);}
-    | ADDRESS string_id {char* t = $2->token; char *s = malloc(strlen(t)+strlen("&")+1); strcat (s,"&"); strcat(s,t); $2->token = s; $$ = $2;}
+    | ABSUOLUTE id ABSUOLUTE {$$ = mknode("LEN OF"); addNode(&$$,$2);}
+    | ADDRESS id {$$ = mknode("&"); addNode(&$$, $2);}
+    | ADDRESS string_id {$$ = mknode("&"); addNode(&$$, $2);}
     | int
     | hex
     | real
@@ -256,39 +255,39 @@ string_id:
     id LEFTBRACKET expression RIGHTBRACKET {$$ = $1; node* index = mknode("INDEX"); addNode(&index,$3); addNode(&$$, index);}
 
 csnull: 
-    CSNULL  { $$ = mknode (yytext); $$->val_type = "NULL";}
+    CSNULL  { $$ = mknode (yytext); $$->val_type = "NULL"; $$->line = linecount;}
     ;
 
 string:
-    STR {$$ = mknode(yytext); $$->val_type = "STRING";}
+    STR {$$ = mknode(yytext); $$->val_type = "STRING"; $$->line = linecount;}
     ;
 
 char:
-    CHARACTER {$$ = mknode(yytext); $$->val_type = "CHAR";}
+    CHARACTER {$$ = mknode(yytext); $$->val_type = "CHAR"; $$->line = linecount;}
     ;
 
 int:
-    INTEGER {$$ = mknode(yytext); $$->val_type = "INT";}
+    INTEGER {$$ = mknode(yytext); $$->val_type = "INT"; $$->line = linecount;}
     ;
 
 real:
-    REAL_D {$$ = mknode(yytext); $$->val_type = "REAL";}
+    REAL_D {$$ = mknode(yytext); $$->val_type = "REAL"; $$->line = linecount;}
     ;
 
 hex:
-    HEX {$$ = mknode(yytext); $$->val_type = "HEX";}
+    HEX {$$ = mknode(yytext); $$->val_type = "HEX"; $$->line = linecount;}
     ;
 
 true:
-    BOOLTRUE {$$ = mknode(yytext); $$->val_type = "BOOL";}
+    BOOLTRUE {$$ = mknode(yytext); $$->val_type = "BOOL"; $$->line = linecount;}
     ;
 
 false:
-    BOOLFALSE {$$ = mknode(yytext); $$->val_type = "BOOL";}
+    BOOLFALSE {$$ = mknode(yytext); $$->val_type = "BOOL"; $$->line = linecount;}
     ;
 
 id: 
-    ID {$$ = mknode(yytext); $$->val_type = "ID";}
+    ID {$$ = mknode(yytext); $$->val_type = "ID"; $$->line = linecount;}
     ;
 
 %%

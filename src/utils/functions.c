@@ -3,7 +3,8 @@
 #include <ctype.h>
 
 scopeNode* topStack = NULL;
-int SCOPE_NUM = 0;
+int GlobalScope = 0;
+
 
 void addNode(node** father, node* son) {
 	if ((*father)->count == 0) {
@@ -17,6 +18,7 @@ void addNode(node** father, node* son) {
 		(*father)->count++;
 	}
 }
+
 
 void printtree(node* tree, int tab) {
 	int i;
@@ -42,6 +44,7 @@ void printtree(node* tree, int tab) {
 		printf(")\n");
 }
 
+
 node* mknode(char* token) {
 	node *newnode = (node*)malloc(sizeof(node));
 	char *newstr = (char*)malloc(sizeof(token) + 1);
@@ -49,9 +52,12 @@ node* mknode(char* token) {
 	newnode->token = newstr;
 	newnode->nodes = NULL;
 	newnode->val_type = NULL;
+	newnode->father = NULL;
 	newnode->count = 0;
+	newnode->line = 0;
 	return newnode;
 }
+
 
 void mknodelist(node* father, node* son) {
 	node* temp = son;
@@ -61,6 +67,7 @@ void mknodelist(node* father, node* son) {
 		addNode(&father, mknode(temp->token));
 	}
 }
+
 
 node* integrate(char* token, node* one, node* two) {
 	int i = 0, j = 0;
@@ -91,6 +98,7 @@ node* integrate(char* token, node* one, node* two) {
 	return new;
 }
 
+
 void addlist(node* root, node* arr){
 	if (arr->count == 0){
 		addNode(&root, arr);
@@ -102,13 +110,14 @@ void addlist(node* root, node* arr){
 	}
 }
 
+
 void semanticAnalysis(node* root){
 	printf("\n");
 	pushStat(root, 0);
-
 	isSymbolExist(topStack);
 	printInfo(root);
 }
+
 
 void pushStat(node* root, int level){
 	if (root == NULL)
@@ -131,7 +140,7 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "IF" ,NULL, root->nodes[1]->nodes, level, root->nodes[1]->count);
 		char* evalType = EvaluateExp(root->nodes[0]);
 		if(strcmp("BOOL" ,evalType)){
-			printf("IF-condition must return type BOOL not %s\n", evalType);
+			printf("[line:%d] IF-condition must return type BOOL\n",root->line);
 		}
 	}
 	else if (!strcmp(root->token, "WHILE")){
@@ -139,7 +148,7 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "WHILE" ,NULL, root->nodes[1]->nodes, level, root->nodes[1]->count);
 		char* evalType = EvaluateExp(root->nodes[0]);
 		if(strcmp("BOOL" ,evalType)){
-			printf("WHILE-condition must return type BOOL not %s\n", evalType);
+			printf("[line:%d] WHILE-condition must return type BOOL\n", root->line);
 		}
 	}
 	else if (!strcmp(root->token, "DO-WHILE")){
@@ -147,7 +156,7 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "DO-WHILE" ,NULL, root->nodes[0]->nodes, level, root->nodes[0]->count);
 		char* evalType = EvaluateExp(root->nodes[1]);
 		if(strcmp("BOOL" ,evalType)){
-			printf("DO-WHILE-condition must return type BOOL not %s\n", evalType);
+			printf("[line:%d] DO-WHILE-condition must return type BOOL\n", root->line);
 		}
 	}
 	else if (!strcmp(root->token, "FOR")){
@@ -155,16 +164,20 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "FOR" ,NULL, root->nodes[3]->nodes, level, root->nodes[3]->count);
 		char* initType = EvaluateExp(root->nodes[0]);
 		if(strcmp("INT" ,initType)){
-			printf("FOR-init must return type INT not %s\n", initType);
+			printf("[line:%d] FOR-init must initialized with type INT\n", root->nodes[0]->line);
 		}
 		char* evalType = EvaluateExp(root->nodes[1]);
 		if(strcmp("BOOL" ,evalType)){
-			printf("FOR-condition must return type BOOL not %s\n", evalType);
+			printf("[line:%d] FOR-condition must return type BOOL\n", root->nodes[0]->line);
 		}
 		char* incType = EvaluateExp(root->nodes[2]);
 		if(strcmp("INT" ,incType)){
-			printf("FOR-increment must return type INT not %s\n", incType);
+			printf("[line:%d] FOR-increment must return type INT\n", root->nodes[0]->line);
 		}
+	}
+	else if (!strcmp(root->token, "BLOCK") && root->father == NULL){
+		level++;
+		pushScopeToStack(&topStack, "BLOCK" ,NULL, root->nodes, level, root->count);
 	}
 
 	for (int i = 0; i < root->count; i++){
@@ -172,12 +185,13 @@ void pushStat(node* root, int level){
 	}
 }
 
+
 void pushScopeToStack(scopeNode** top, char* name, node* params, node** statements, int level, int stat_size){      
 	scopeNode* new_scope = (scopeNode*) malloc(sizeof(scopeNode));
 	new_scope->scopeName = (char*)(malloc (sizeof(name) + 1));
 	strncpy(new_scope->scopeName, name, sizeof(name)+1);
-	SCOPE_NUM++;
-	new_scope->scopeNum=SCOPE_NUM;
+	GlobalScope++;
+	new_scope->scopeNum = GlobalScope;
 	new_scope->scopeLevel=level-1;
 	new_scope->next = (*top);
 	(*top) = new_scope;
@@ -186,6 +200,7 @@ void pushScopeToStack(scopeNode** top, char* name, node* params, node** statemen
 	}
 	pushScopeStatements(statements, stat_size);
 }
+
 
 void pushScopeStatements(node** statements, int size){
 	for (int i = 0;i < size;i++){
@@ -196,7 +211,7 @@ void pushScopeStatements(node** statements, int size){
 			pushToTable(&topStack,statements[i]->nodes[0]->token, statements[i]->nodes[2]->token,NULL,1, statements[i]->nodes[1]);
 		}
 		else if(!strcmp(statements[i]->token, "=")){
-        	if (isDeclared(statements[i]->nodes[0]->token)){ // אולי לא צריך את הפונקציה הנל
+        	if (isDeclared(statements[i]->nodes[0]->token)){
                 char *left = scopeSearch(statements[i]->nodes[0]->token)->type;
                 char *right = EvaluateExp(statements[i]->nodes[1]);
 				if (!strcmp(left, "STRING")){
@@ -204,8 +219,10 @@ void pushScopeStatements(node** statements, int size){
 				}
 				else if (strcmp(left, "STRING") && statements[i]->nodes[0]->count > 0)
 					printf("%s can not have index\n", left);
-            	else if (strcmp(right,left) && strcmp(right,""))
-                    printf("Assignment Error mismatch: cannot assign %s to %s\n", right, left);
+				else if (!strcmp(right, "NULL") && (strcmp(left, "INT*") && strcmp(left, "CHAR*") && strcmp(left, "REAL*")))
+					printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", statements[i]->line, right, left);
+            	else if (strcmp(right,left) && strcmp(right,"") && strcmp(right,"NULL"))
+                    printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", statements[i]->line, right, left);
 			}
 		}
 
@@ -215,11 +232,13 @@ void pushScopeStatements(node** statements, int size){
 	}
 }
 
+
 void pushSymbols(node* decleration){
 	for(int i = 0; i<decleration->count;i++){
 		pushNodesToSymtable(decleration->nodes[i]->token, decleration->nodes[i]->nodes, decleration->nodes[i]->count);
 	}
 }
+
 
 void pushNodesToSymtable(char* type, node** vars, int size){
 	for(int i = 0;i < size; i++){
@@ -242,6 +261,12 @@ void pushNodesToSymtable(char* type, node** vars, int size){
 					printf("Can not assign %s to %s - [%s]\n", evalType, type, vars[i]->nodes[0]->token);
 			}
 		}
+
+		else if ((!strcmp(vars[i]->token, "=") && !strcmp("NULL", EvaluateExp(vars[i]->nodes[1]))))
+			if (strcmp(type, "INT*") && strcmp(type, "CHAR*") && strcmp(type, "REAL*"))
+				printf("[line:%d] Assignment Error mismatch: can not assign NULL to %s\n", vars[i]->line, type);
+			else
+				pushToTable(&topStack, vars[i]->nodes[0]->token, type, vars[i]->nodes[1]->token, 0, NULL);
 		else{
 			if (strcmp(vars[i]->token, "="))
 				pushToTable(&topStack, vars[i]->token, type, NULL, 0, NULL);
@@ -255,6 +280,7 @@ void pushNodesToSymtable(char* type, node** vars, int size){
 		}
 	}
 }
+
 
 void pushToTable(scopeNode** top, char* id, char* type, char* data, int isFunc, node* params){
 	symbolNode* new_node = (symbolNode*) malloc(sizeof(symbolNode));
@@ -280,6 +306,7 @@ void pushToTable(scopeNode** top, char* id, char* type, char* data, int isFunc, 
 	(*top)->symbolTable = new_node;
 }
 
+
 int isDeclared(char* id){
 	symbolNode *symbol = scopeSearch(id);
 	if (symbol != NULL)
@@ -289,6 +316,7 @@ int isDeclared(char* id){
 		return 0;
 	}
 }
+
 
 symbolNode* symbolSearch (symbolNode* symTable, char* id){
     symbolNode* current = symTable;
@@ -302,17 +330,25 @@ symbolNode* symbolSearch (symbolNode* symTable, char* id){
     return NULL;
 }
 
+
 symbolNode* scopeSearch(char* id){
 	scopeNode* current = topStack;
 	symbolNode* res;
+	int currLevel;
 	while (current != NULL){
+		currLevel = current->scopeLevel;
 		res = symbolSearch(current->symbolTable, id);
 		if (res != NULL)
 			return res;
-		current = current->next;
+		if (currLevel == 1)
+			return NULL;
+		
+		while (current->scopeLevel > 0 && current->scopeLevel >= currLevel)
+			current = current->next;
 	}
 	return NULL;
 }
+
 
 int checkFunctionCall(char *funcName, node *callArgs){
     symbolNode *funcSymbol = scopeSearch(funcName);
@@ -322,6 +358,7 @@ int checkFunctionCall(char *funcName, node *callArgs){
     printf ("no procedure was defined with arguements matching called function (%s)\n", funcName);
     return 0; 
 }
+
 
 int checkFunctionArgs(node* params, node* callArgs){
 	if (!strcmp(params->token,"ARGS_NONE") && !strcmp(callArgs->token,"ARGS_NONE"))
@@ -341,6 +378,7 @@ int checkFunctionArgs(node* params, node* callArgs){
 	return 1;
 }
 
+
 int checkFuncReturn(node *funcNode){
     char *funcType = funcNode->nodes[2]->token;
     int ans = evalReturn(funcNode->nodes[3], funcType);	
@@ -354,6 +392,7 @@ int checkFuncReturn(node *funcNode){
     }
     return 1;
 }
+
 
 void checkString(node* strNode, char* assType){
 	if(strcmp(assType,"CHAR") && strNode->nodes[0]->count != 0 && !strcmp(strNode->nodes[0]->nodes[0]->token, "INDEX")){
@@ -370,6 +409,7 @@ void checkString(node* strNode, char* assType){
 	}
 }
 
+
 int evalReturn(node* funcNode, char* type){
 	for (int i=0;i<funcNode->count;i++){
 		if(!strcmp(funcNode->nodes[i]->token, "RET")){
@@ -382,20 +422,26 @@ int evalReturn(node* funcNode, char* type){
 					return 0;
 			}
 		}
-		if(evalReturn(funcNode->nodes[i], type)==0)
-			return 0;
+		if(strcmp(funcNode->nodes[i]->token, "FUNCTION"))
+			if(evalReturn(funcNode->nodes[i], type)==0)
+				return 0;
 	}
 	return 1;
 }
+
 
 char* EvaluateExp(node* exp){
 	if (exp->val_type != NULL && !strcmp(exp->val_type, "ID")){
 		symbolNode* node = scopeSearch(exp->token);
 		if(node != NULL){
-			if(!strcmp(node->type, "STRING") && exp->count > 0)
-				return "CHAR";
-			// else if (strcmp(node->type, "STRING") == 0 && exp->count > 0)
-			// 	printf("%s can not have index\n", node->type);
+			if(!strcmp(node->type, "STRING") && exp->count > 0){
+				char* indexType = EvaluateExp(exp->nodes[0]->nodes[0]);
+				if(strcmp("INT", indexType)){
+					printf("Size of string must be type INT not %s\n", indexType);
+					return "";
+				}
+			return "CHAR";
+			}
 			return node->type;
 		}
         else{
@@ -403,6 +449,9 @@ char* EvaluateExp(node* exp){
             return "NULL";
 		}
 	}
+
+	else if (exp->val_type != NULL && !strcmp(exp->val_type, "NULL"))
+		return "NULL";
 
 	else if (exp->val_type != NULL)
 		return exp->val_type;
@@ -427,6 +476,12 @@ char* EvaluateExp(node* exp){
 			return "REAL";
 		else if ((!strcmp(left,"REAL") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"REAL")))
 			return "REAL";
+		else if (((!strcmp(left,"INT*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"INT*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
+			return "INT*";
+		else if (((!strcmp(left,"CHAR*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"CHAR*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
+			return "CHAR*";
+		else if (((!strcmp(left,"REAL*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"REAL*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
+			return "REAL*";
 		else {
 			printf("Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
 		}
@@ -483,6 +538,28 @@ char* EvaluateExp(node* exp){
 			printf("Can not perform ! on [%s] - [!%s]\n", left,exp->nodes[0]->token);
 	}
 
+	else if (!strcmp(exp->token,"LEN OF")){
+		char*  left;
+        left = EvaluateExp(exp->nodes[0]);
+		if(!strcmp(left,"STRING"))
+            return "INT";
+		else
+			printf("Can not perform || on [%s] - [|%s|]\n", left,exp->nodes[0]->token);
+	}
+
+	else if (!strcmp(exp->token,"&")){
+		char*  left;
+        left = EvaluateExp(exp->nodes[0]);
+		if(!strcmp(left,"INT"))
+            return "INT*";
+		else if(!strcmp(left,"CHAR"))
+            return "CHAR*";
+		else if(!strcmp(left,"REAL"))
+            return "REAL*";
+		else
+			printf("Can not perform & on [%s] - [&%s]\n", left,exp->nodes[0]->token);
+	}
+
 	else if(!strcmp(exp->token, "=")){
         	if (isDeclared(exp->nodes[0]->token)){
                 char *left = scopeSearch(exp->nodes[0]->token)->type;
@@ -496,6 +573,7 @@ char* EvaluateExp(node* exp){
 	return "";
 }
 
+
 int isSymbolExist(scopeNode* scope){
     scopeNode * current = scope;
     while(current != NULL){
@@ -504,6 +582,7 @@ int isSymbolExist(scopeNode* scope){
     }
     return 1;
 }
+
 
 int checkSymbols(scopeNode* scope)
 {
@@ -527,6 +606,7 @@ int checkSymbols(scopeNode* scope)
     return 1;
 }
 
+
 void printInfo(node *root){
     printf ("\nSyntax Tree:\n"); 
 	printtree (root,0);
@@ -540,6 +620,7 @@ void printInfo(node *root){
     printScopes(topStack);
     printf("\n"); 
 }
+
 
 void printSymbolTable(scopeNode *node)
 {  
@@ -556,12 +637,13 @@ void printSymbolTable(scopeNode *node)
 	}
 }
 
+
 void printScopes(scopeNode *node){
     scopeNode *current=node;
     while (current != NULL)	{
 		printf("scope id:{%s} scopeNum:{%d} scopeLevel:{%d}\n", current->scopeName,current->scopeNum,current->scopeLevel);
 		current = current->next;
 	}
-    printf("num of scopes:{%d}\n",SCOPE_NUM);
+    printf("num of scopes:{%d}\n",GlobalScope);
 }
 
