@@ -312,7 +312,7 @@ int isDeclared(char* id){
 	if (symbol != NULL)
 		return 1;
 	else{
-		printf("Undeclared variable [%s]\n", id);
+		printf("Undeclared variabhhle [%s]\n", id);
 		return 0;
 	}
 }
