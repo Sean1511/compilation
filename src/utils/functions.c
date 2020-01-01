@@ -308,11 +308,18 @@ void pushToTable(scopeNode** top, char* id, char* type, char* data, int isFunc, 
 
 
 int isDeclared(char* id){
+	// if(id[0] == '*'){
+	// 	printf("%zu\n",strlen(id));
+	// 	char* temp = (char*)malloc(sizeof(char) * (strlen(id)));
+	// 	id = id + 1;
+	// 	memcpy(temp, id, strlen(id) + 1);
+	// 	puts(id);
+	// }
 	symbolNode *symbol = scopeSearch(id);
 	if (symbol != NULL)
 		return 1;
 	else{
-		printf("Undeclared variabhhle [%s]\n", id);
+		printf("Undeclared variable [%s]\n", id);
 		return 0;
 	}
 }
