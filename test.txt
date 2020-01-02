@@ -1,9 +1,13 @@
-function void fee1()
-{
-   string s[10];
-   var int* c;
-   var int* x;
-   *c = 5 + x;
+function void main(){ 
+   var int x;
+   var int* y;
+   var char* t;
+   var char z;
+   *y = 9;
+   x = *z;        
+   y = *(x - 5);       
+   *t = 'y';
+   x = *(y - 5);
 }
 
-function void main(){}
+

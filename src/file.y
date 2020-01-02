@@ -19,7 +19,8 @@ int yyerror(char *s);
 %left AND OR
 %left EQUAL GREATER GREATEREQUAL LESSEQUAL LESS NOTEQUAL 
 %left MINUS PLUS
-%left MULTI DIVISION
+%left MULL MULTI DIVISION
+%expect 1
 %start s
 
 %%
@@ -47,11 +48,11 @@ function:
     ;
 
 void_func: 
-    FUNCTION VOID id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); node* v = mknode("VOID"); addNode(&s,$3); addNode(&s,$5); addNode(&s, v); addNode(&s, $7); addNode(&$$,s);}
+    FUNCTION VOID id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); s->line = $3->line; node* v = mknode("VOID"); addNode(&s,$3); addNode(&s,$5); addNode(&s, v); addNode(&s, $7); addNode(&$$,s);}
     ; 
 
 value_func: 
-    FUNCTION func_type id LEFTPAREN args RIGHTPAREN value_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); addNode(&s,$3); addNode(&s,$5); addNode(&s, $2); addNode(&s, $7); addNode(&$$,s);}
+    FUNCTION func_type id LEFTPAREN args RIGHTPAREN value_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); s->line = $3->line; addNode(&s,$3); addNode(&s,$5); addNode(&s, $2); addNode(&s, $7); addNode(&$$,s);}
     ;
 
  void_block:
@@ -96,7 +97,7 @@ if_statment:
     ;
 
 if_else_statment:
-    IF LEFTPAREN expression RIGHTPAREN statment ELSE statment {$$ = mknode("s"); node* s = mknode("IF-ELSE"); addNode(&s, $3); addlist(s,$5); s->nodes[1]->father = "IF"; addlist(s, $7); addNode(&$$,s);}
+    IF LEFTPAREN expression RIGHTPAREN statment ELSE statment {$$ = mknode("s"); node* s = mknode("IF-ELSE"); s->line = $3->line; addNode(&s, $3); addlist(s,$5); s->nodes[1]->father = "IF"; addlist(s, $7); addNode(&$$,s);}
     ;
 
 loop_statment: 
@@ -117,6 +118,7 @@ do_while:
 
 stat_assignment:
     id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
+    | ptr ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
     ;
 
 string_assignment:
@@ -124,21 +126,21 @@ string_assignment:
     ;
 
 expression:
-    expression PLUS expression {$$ = mknode("+"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression MINUS expression {$$ = mknode("-"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression MULTI expression {$$ = mknode("*"); addNode(&$$,$1); addNode(&$$, $3);} 
-    | expression DIVISION expression {$$ = mknode("/"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression EQUAL expression { $$ = mknode ("=="); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression GREATER expression { $$ = mknode (">"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression GREATEREQUAL expression { $$ = mknode (">="); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression LESS expression { $$ = mknode ("<"); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression LESSEQUAL expression { $$ = mknode ("<="); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression NOTEQUAL expression { $$ = mknode ("!="); addNode(&$$,$1); addNode(&$$, $3);}
-    | expression AND expression {$$ = mknode("&&"); addNode(&$$,$1); addNode(&$$,$3);} 
-    | expression OR expression {$$ = mknode("||"); addNode(&$$,$1); addNode(&$$,$3);} 
-    | NOT expression {$$ = mknode ("NOT"); addNode(&$$,$2);}
-    | LEFTPAREN expression RIGHTPAREN {$$ = $2;}
-    | ABSUOLUTE id ABSUOLUTE {$$ = mknode("LEN OF"); addNode(&$$,$2);}
+    expression PLUS expression {$$ = mknode("+"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression MINUS expression {$$ = mknode("-"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression MULTI expression {$$ = mknode("*"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);} 
+    | expression DIVISION expression {$$ = mknode("/"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression EQUAL expression { $$ = mknode ("=="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression GREATER expression { $$ = mknode (">"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression GREATEREQUAL expression { $$ = mknode (">="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression LESS expression { $$ = mknode ("<"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression LESSEQUAL expression { $$ = mknode ("<="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression NOTEQUAL expression { $$ = mknode ("!="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    | expression AND expression {$$ = mknode("&&"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$,$3);} 
+    | expression OR expression {$$ = mknode("||"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$,$3);} 
+    | NOT expression {$$ = mknode ("NOT"); $$->line = $2->line; addNode(&$$,$2);}
+    | LEFTPAREN expression RIGHTPAREN {$$ = $2; $$->line = $2->line;}
+    | ABSUOLUTE expression ABSUOLUTE {$$ = mknode("LEN OF"); addNode(&$$,$2);}
     | ADDRESS id {$$ = mknode("&"); addNode(&$$, $2);}
     | ADDRESS string_id {$$ = mknode("&"); addNode(&$$, $2);}
     | int
@@ -151,13 +153,14 @@ expression:
     | id
     | char
     | string
+    | ptr %prec MULL
     ;
 
 func_call: 
-    id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("FUNC_CALL"); addNode(&s,$1); node* args = mknode("ARGS"); addlist(args, $3); addNode(&s, args); addNode(&$$,s);}
-    |id ASSIGNMENT id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); addNode(&call,$3); node* args = mknode("ARGS"); addlist(args, $5); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
-    |id LEFTPAREN RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("FUNC_CALL"); addNode(&s,$1); node* args = mknode("ARGS NONE"); addNode(&s, args); addNode(&$$,s);}
-    |id ASSIGNMENT id LEFTPAREN RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); addNode(&s,$1); node* call = mknode("FUNC_CALL"); addNode(&call,$3); node* args = mknode("ARGS NONE"); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
+    id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("FUNC_CALL");  addNode(&s,$1); node* args = mknode("ARGS"); args->line = $1->line; addlist(args, $3); addNode(&s, args); addNode(&$$,s);}
+    |id ASSIGNMENT id LEFTPAREN func_params RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); s->line = $3->line; addNode(&s,$1); node* call = mknode("FUNC_CALL"); addNode(&call,$3); node* args = mknode("ARGS"); args->line = $1->line; addlist(args, $5); addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
+    |id LEFTPAREN RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("FUNC_CALL"); addNode(&s,$1); node* args = mknode("ARGS NONE"); args->line = $1->line; addNode(&s, args); addNode(&$$,s);}
+    |id ASSIGNMENT id LEFTPAREN RIGHTPAREN {$$ = mknode("s"); node* s = mknode ("="); s->line = $3->line; addNode(&s,$1); node* call = mknode("FUNC_CALL"); addNode(&call,$3); node* args = mknode("ARGS NONE"); args->line = $1->line; addNode(&call, args); addNode(&s, call); addNode(&$$,s);}
     ; 
 
 func_params:
@@ -289,6 +292,9 @@ false:
 id: 
     ID {$$ = mknode(yytext); $$->val_type = "ID"; $$->line = linecount;}
     ;
+
+ptr:
+    MULTI expression {$$ = mknode("PTR"); node* m = mknode("*"); addNode(&m, $2); addNode(&$$,m);}
 
 %%
 

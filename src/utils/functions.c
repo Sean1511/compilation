@@ -4,6 +4,7 @@
 
 scopeNode* topStack = NULL;
 int GlobalScope = 0;
+int ERROR = 0;
 
 
 void addNode(node** father, node* son) {
@@ -115,7 +116,10 @@ void semanticAnalysis(node* root){
 	printf("\n");
 	pushStat(root, 0);
 	isSymbolExist(topStack);
-	printInfo(root);
+	if (ERROR > 0)
+		printf("%d Errors found\n\n",ERROR);
+	else
+		printInfo(root);
 }
 
 
@@ -140,6 +144,7 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "IF" ,NULL, root->nodes[1]->nodes, level, root->nodes[1]->count);
 		char* evalType = EvaluateExp(root->nodes[0]);
 		if(strcmp("BOOL" ,evalType)){
+			ERROR++;
 			printf("[line:%d] IF-condition must return type BOOL\n",root->line);
 		}
 	}
@@ -148,6 +153,7 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "WHILE" ,NULL, root->nodes[1]->nodes, level, root->nodes[1]->count);
 		char* evalType = EvaluateExp(root->nodes[0]);
 		if(strcmp("BOOL" ,evalType)){
+			ERROR++;
 			printf("[line:%d] WHILE-condition must return type BOOL\n", root->line);
 		}
 	}
@@ -156,6 +162,7 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "DO-WHILE" ,NULL, root->nodes[0]->nodes, level, root->nodes[0]->count);
 		char* evalType = EvaluateExp(root->nodes[1]);
 		if(strcmp("BOOL" ,evalType)){
+			ERROR++;
 			printf("[line:%d] DO-WHILE-condition must return type BOOL\n", root->line);
 		}
 	}
@@ -164,14 +171,17 @@ void pushStat(node* root, int level){
 		pushScopeToStack(&topStack, "FOR" ,NULL, root->nodes[3]->nodes, level, root->nodes[3]->count);
 		char* initType = EvaluateExp(root->nodes[0]);
 		if(strcmp("INT" ,initType)){
+			ERROR++;
 			printf("[line:%d] FOR-init must initialized with type INT\n", root->nodes[0]->line);
 		}
 		char* evalType = EvaluateExp(root->nodes[1]);
 		if(strcmp("BOOL" ,evalType)){
+			ERROR++;
 			printf("[line:%d] FOR-condition must return type BOOL\n", root->nodes[0]->line);
 		}
 		char* incType = EvaluateExp(root->nodes[2]);
 		if(strcmp("INT" ,incType)){
+			ERROR++;
 			printf("[line:%d] FOR-increment must return type INT\n", root->nodes[0]->line);
 		}
 	}
@@ -207,28 +217,52 @@ void pushScopeStatements(node** statements, int size){
 		if(!strcmp(statements[i]->token, "VAR")){
 			pushSymbols(statements[i]);
 		}
+
 		else if (!strcmp(statements[i]->token, "FUNCTION")){
 			pushToTable(&topStack,statements[i]->nodes[0]->token, statements[i]->nodes[2]->token,NULL,1, statements[i]->nodes[1]);
-		}
-		else if(!strcmp(statements[i]->token, "=")){
-        	if (isDeclared(statements[i]->nodes[0]->token)){
-                char *left = scopeSearch(statements[i]->nodes[0]->token)->type;
-                char *right = EvaluateExp(statements[i]->nodes[1]);
-				if (!strcmp(left, "STRING")){
-					checkString(statements[i], right);
-				}
-				else if (strcmp(left, "STRING") && statements[i]->nodes[0]->count > 0)
-					printf("%s can not have index\n", left);
-				else if (!strcmp(right, "NULL") && (strcmp(left, "INT*") && strcmp(left, "CHAR*") && strcmp(left, "REAL*")))
-					printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", statements[i]->line, right, left);
-            	else if (strcmp(right,left) && strcmp(right,"") && strcmp(right,"NULL"))
-                    printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", statements[i]->line, right, left);
-			}
 		}
 
 		else if (!strcmp(statements[i]->token, "FUNC_CALL")){
 			checkFunctionCall(statements[i]->nodes[0]->token, statements[i]->nodes[1]);
 		}
+
+		else if(!strcmp(statements[i]->token, "=")){
+        	if (isDeclared(statements[i]->nodes[0]->token) && strcmp(statements[i]->nodes[0]->token,"PTR")){
+                char *left = scopeSearch(statements[i]->nodes[0]->token)->type;
+                char *right = EvaluateExp(statements[i]->nodes[1]);
+				if (!strcmp(left, "STRING"))
+					checkString(statements[i], right);
+				else if (strcmp(left, "STRING") && statements[i]->nodes[0]->count > 0){
+					ERROR++;
+					printf("[line:%d] %s can not have index\n", statements[i]->nodes[0]->line, left);
+				}
+				else if (!strcmp(right, "NULL") && (strcmp(left, "INT*") && strcmp(left, "CHAR*") && strcmp(left, "REAL*"))){
+					ERROR++;
+					printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", statements[i]->line, right, left);
+				}
+            	else if (strcmp(right,left) && strcmp(right,"undefined")){
+					ERROR++;
+                    printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", statements[i]->line, right, left);
+				}
+			}
+			else if (!strcmp(statements[i]->nodes[0]->token,"PTR") && isDeclared(statements[i]->nodes[0]->nodes[0]->nodes[0]->token))
+				evalPtr(statements[i]);
+			else{
+				EvaluateExp(statements[i]->nodes[1]);
+				ERROR++;
+				printf("[line:%d] Undeclared variable [%s]\n", statements[i]->line, statements[i]->nodes[0]->token);
+			}
+		}
+	}
+}
+
+
+void evalPtr(node* ptrNode){
+	char *left = EvaluateExp(ptrNode->nodes[0]);
+	char *right = EvaluateExp(ptrNode->nodes[1]);
+	if (strcmp(right,left)){
+		ERROR++;
+		printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", ptrNode->line, right, left);
 	}
 }
 
@@ -244,27 +278,35 @@ void pushNodesToSymtable(char* type, node** vars, int size){
 	for(int i = 0;i < size; i++){
 		if (strcmp(vars[i]->token, "=") && strcmp(type, "STRING") == 0){
 			char* evalType = EvaluateExp(vars[i]->nodes[0]->nodes[0]);
-			if(strcmp("INT", evalType))
-				printf("Size of string must be type INT not %s\n", evalType);
+			if(strcmp("INT", evalType)){
+				ERROR++;
+				printf("[line:%d] Size of string must be type INT not %s\n", vars[i]->line, evalType);
+			}
 			else
 				pushToTable(&topStack, vars[i]->token, type, NULL, 0, NULL);
 		}
 		else if ((!strcmp(vars[i]->token, "=") && strcmp(type, "STRING") == 0)){
 			char* evalType = EvaluateExp(vars[i]->nodes[0]->nodes[0]->nodes[0]);
-			if(strcmp("INT", evalType))
-				printf("Size of string must be type INT not %s\n", evalType);
+			if(strcmp("INT", evalType)){
+				ERROR++;
+				printf("[line:%d] Size of string must be type INT not %s\n", vars[i]->nodes[0]->line, evalType);
+			}
 			else {
 				evalType = EvaluateExp(vars[i]->nodes[1]);
 				if (!strcmp(type,evalType))
 					pushToTable(&topStack, vars[i]->nodes[0]->token, type, vars[i]->nodes[1]->token, 0, NULL);
-				else
-					printf("Can not assign %s to %s - [%s]\n", evalType, type, vars[i]->nodes[0]->token);
+				else{
+					ERROR++;
+					printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", vars[i]->nodes[0]->line, evalType, type);
+				}
 			}
 		}
 
-		else if ((!strcmp(vars[i]->token, "=") && !strcmp("NULL", EvaluateExp(vars[i]->nodes[1]))))
-			if (strcmp(type, "INT*") && strcmp(type, "CHAR*") && strcmp(type, "REAL*"))
+		else if ((!strcmp(vars[i]->token, "=") && vars[i]->nodes[1]->val_type != NULL && !strcmp("NULL", vars[i]->nodes[1]->val_type)))
+			if (strcmp(type, "INT*") && strcmp(type, "CHAR*") && strcmp(type, "REAL*")){
+				ERROR++;
 				printf("[line:%d] Assignment Error mismatch: can not assign NULL to %s\n", vars[i]->line, type);
+			}
 			else
 				pushToTable(&topStack, vars[i]->nodes[0]->token, type, vars[i]->nodes[1]->token, 0, NULL);
 		else{
@@ -274,8 +316,10 @@ void pushNodesToSymtable(char* type, node** vars, int size){
 				char* evalType = EvaluateExp(vars[i]->nodes[1]);
 				if (!strcmp(type,evalType))
 					pushToTable(&topStack, vars[i]->nodes[0]->token, type, vars[i]->nodes[1]->token, 0, NULL);
-				else
-					printf("Can not assign %s to %s - [%s]\n", evalType, type, vars[i]->nodes[0]->token);
+				else {
+					ERROR++;
+					printf("[line:%d] Assignment Error mismatch: can not assign %s to %s\n", vars[i]->nodes[0]->line, evalType, type);
+				}
 			}	
 		}
 	}
@@ -308,20 +352,10 @@ void pushToTable(scopeNode** top, char* id, char* type, char* data, int isFunc, 
 
 
 int isDeclared(char* id){
-	// if(id[0] == '*'){
-	// 	printf("%zu\n",strlen(id));
-	// 	char* temp = (char*)malloc(sizeof(char) * (strlen(id)));
-	// 	id = id + 1;
-	// 	memcpy(temp, id, strlen(id) + 1);
-	// 	puts(id);
-	// }
 	symbolNode *symbol = scopeSearch(id);
 	if (symbol != NULL)
 		return 1;
-	else{
-		printf("Undeclared variable [%s]\n", id);
-		return 0;
-	}
+	return 0;
 }
 
 
@@ -347,7 +381,7 @@ symbolNode* scopeSearch(char* id){
 		res = symbolSearch(current->symbolTable, id);
 		if (res != NULL)
 			return res;
-		if (currLevel == 1)
+		if (currLevel == 0)
 			return NULL;
 		
 		while (current->scopeLevel > 0 && current->scopeLevel >= currLevel)
@@ -362,7 +396,8 @@ int checkFunctionCall(char *funcName, node *callArgs){
 	if (funcSymbol !=NULL)
 		if (checkFunctionArgs(funcSymbol->params, callArgs))
 			return 1;
-    printf ("no procedure was defined with arguements matching called function (%s)\n", funcName);
+	ERROR++;		
+    printf ("[line:%d] Undeclared function (%s) with unmatching arguements\n", callArgs->line,funcName);
     return 0; 
 }
 
@@ -390,11 +425,13 @@ int checkFuncReturn(node *funcNode){
     char *funcType = funcNode->nodes[2]->token;
     int ans = evalReturn(funcNode->nodes[3], funcType);	
     if (!strcmp(funcType,"VOID") && ans == 0){
-        printf ("A void function (%s) cannot return a value\n", funcNode->nodes[0]->token);
+		ERROR++;
+        printf ("[line:%d] Void function (%s) cannot return value\n", funcNode->line, funcNode->nodes[0]->token);
         return 0;
     }
     else if (ans == 0){
-        printf ("Function (%s) return invalid value\n", funcNode->nodes[0]->token);
+		ERROR++;
+        printf ("[line:%d] Function (%s) return invalid value\n", funcNode->line ,funcNode->nodes[0]->token);
         return 0;
     }
     return 1;
@@ -403,16 +440,21 @@ int checkFuncReturn(node *funcNode){
 
 void checkString(node* strNode, char* assType){
 	if(strcmp(assType,"CHAR") && strNode->nodes[0]->count != 0 && !strcmp(strNode->nodes[0]->nodes[0]->token, "INDEX")){
-		printf("Assignment Error mismatch: must assign CHAR to cell of string array not %s\n", assType);
+		ERROR++;
+		printf("[line:%d] Assignment Error mismatch: must assign CHAR to cell of string array not %s\n", strNode->nodes[0]->line ,assType);
 	}
-	else if (strNode->nodes[0]->count != 0 && !strcmp(strNode->nodes[0]->nodes[0]->token, "INDEX")){
+	if (strNode->nodes[0]->count != 0 && !strcmp(strNode->nodes[0]->nodes[0]->token, "INDEX")){
 		char* indexType = EvaluateExp(strNode->nodes[0]->nodes[0]->nodes[0]);
-		if(strcmp("INT", indexType))
-			printf("Size of string must be type INT not %s\n", indexType);
+		if(strcmp("INT", indexType)){
+			ERROR++;
+			printf("[line:%d] Size of string must be type INT not %s\n", strNode->nodes[0]->line ,indexType);
+		}
 	}
-	else if (strNode->nodes[0]->count == 0){
-		if(strcmp("STRING", assType))
-			printf("Assignment Error mismatch: cannot assign %s to STRING\n", assType);
+	if (strNode->nodes[0]->count == 0){
+		if(strcmp("STRING", assType)){
+			ERROR++;
+			printf("[line:%d] Assignment Error mismatch: cannot assign %s to STRING\n", strNode->nodes[0]->line ,assType);
+		}
 	}
 }
 
@@ -444,16 +486,18 @@ char* EvaluateExp(node* exp){
 			if(!strcmp(node->type, "STRING") && exp->count > 0){
 				char* indexType = EvaluateExp(exp->nodes[0]->nodes[0]);
 				if(strcmp("INT", indexType)){
-					printf("Size of string must be type INT not %s\n", indexType);
-					return "";
+					ERROR++;
+					printf("[line:%d] Size of string must be type INT not %s\n", exp->line ,indexType);
+					return "NULL";
 				}
 			return "CHAR";
 			}
 			return node->type;
 		}
         else{
-			printf("Undeclared variable [%s]\n", exp->token);
-            return "NULL";
+			ERROR++;
+			printf("[line:%d] Undeclared variable [%s]\n", exp->line, exp->token);
+            return "undefined";
 		}
 	}
 
@@ -476,7 +520,7 @@ char* EvaluateExp(node* exp){
         left = EvaluateExp(exp->nodes[0]);
         right = EvaluateExp(exp->nodes[1]);
 		if (!strcmp(left, "NULL") || !strcmp(right,"NULL"))
-			return "";
+			return "NULL";
         if (!strcmp(left,"INT") && !strcmp(right,"INT"))
 			return "INT";
 		else if (!strcmp(left,"REAL") && !strcmp(right,"REAL"))
@@ -490,7 +534,8 @@ char* EvaluateExp(node* exp){
 		else if (((!strcmp(left,"REAL*") && !strcmp(right,"INT")) || (!strcmp(left,"INT") && !strcmp(right,"REAL*"))) && strcmp(exp->token,"*") && strcmp(exp->token,"/"))
 			return "REAL*";
 		else {
-			printf("Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+			ERROR++;
+			printf("[line:%d] Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->line, exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
 		}
 	}
 
@@ -500,8 +545,10 @@ char* EvaluateExp(node* exp){
         right = EvaluateExp(exp->nodes[1]);
         if((!strcmp(left,"INT") && !strcmp(right,"INT")) || (!strcmp(left,"REAL") && !strcmp(right,"REAL")))
             return "BOOL";
-		else
-			printf("Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+		else{
+			ERROR++;
+			printf("[line:%d] Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->line,exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+		}
 	}
 
     else if(!strcmp(exp->token,"&&")||!strcmp(exp->token,"||")){
@@ -510,8 +557,10 @@ char* EvaluateExp(node* exp){
         right = EvaluateExp(exp->nodes[1]);
         if(!strcmp(left,"BOOL") && !strcmp(right,"BOOL"))
             return "BOOL";
-		else
-			printf("Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+		else {
+			ERROR++;
+			printf("[line:%d] Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->line, exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+		}
 	}
 
 	else if(!strcmp(exp->token,"==")||!strcmp(exp->token,"!=")){
@@ -526,36 +575,57 @@ char* EvaluateExp(node* exp){
             return "BOOL";  
         else if(!strcmp(left,"REAL")&&!strcmp(right,"REAL"))
             return "BOOL";
-        else if(!strcmp(left,"INTPTR")&&!strcmp(right,"INTPTR"))
+        else if(!strcmp(left,"INT*")&&!strcmp(right,"INT*"))
             return "BOOL";
-		else if(!strcmp(left,"CHARPTR")&&!strcmp(right,"CHARPTR"))
+		else if(!strcmp(left,"CHAR*")&&!strcmp(right,"CHAR*"))
 			return "BOOL";
-		else if(!strcmp(left,"REALPTR")&&!strcmp(right,"REALPTR"))
+		else if(!strcmp(left,"REAL*")&&!strcmp(right,"REAL*"))
 			return "BOOL";
-		else
-			printf("Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+		else{
+			ERROR++;
+			printf("[line:%d] Can not perform [%s] between [%s] and [%s] - [%s %s %s]\n", exp->line ,exp->token, left, right,exp->nodes[0]->token, exp->token, exp->nodes[1]->token);
+		}
 	}
 
 	else if(!strcmp(exp->token,"NOT")){
-        char*  left;
+        char* left;
         left = EvaluateExp(exp->nodes[0]);
         if(!strcmp(left,"BOOL"))
             return "BOOL";
-		else
-			printf("Can not perform ! on [%s] - [!%s]\n", left,exp->nodes[0]->token);
+		else{
+			ERROR++;
+			printf("[line:%d] Can not perform ! on [%s] - [!%s]\n", exp->line ,left,exp->nodes[0]->token);
+		}
+	}
+
+	else if(!strcmp(exp->token,"PTR")){
+        char* left;
+        left = EvaluateExp(exp->nodes[0]->nodes[0]);
+        if(!strcmp(left,"INT*"))
+            return "INT";
+		else if(!strcmp(left,"CHAR*"))
+            return "CHAR";
+		if(!strcmp(left,"REAL*"))
+            return "REAL";
+		else{
+			ERROR++;
+			printf("[line:%d] [%s] is not pointer\n", exp->nodes[0]->nodes[0]->line ,left);
+		}
 	}
 
 	else if (!strcmp(exp->token,"LEN OF")){
-		char*  left;
+		char* left;
         left = EvaluateExp(exp->nodes[0]);
 		if(!strcmp(left,"STRING"))
             return "INT";
-		else
-			printf("Can not perform || on [%s] - [|%s|]\n", left,exp->nodes[0]->token);
+		else{
+			ERROR++;
+			printf("[line:%d] Can not perform || on [%s] - [|%s|]\n", exp->nodes[0]->line, left,exp->nodes[0]->token);
+		}
 	}
 
 	else if (!strcmp(exp->token,"&")){
-		char*  left;
+		char* left;
         left = EvaluateExp(exp->nodes[0]);
 		if(!strcmp(left,"INT"))
             return "INT*";
@@ -563,54 +633,57 @@ char* EvaluateExp(node* exp){
             return "CHAR*";
 		else if(!strcmp(left,"REAL"))
             return "REAL*";
-		else
-			printf("Can not perform & on [%s] - [&%s]\n", left,exp->nodes[0]->token);
+		else{
+			ERROR++;
+			printf("[line:%d] Can not perform & on [%s] - [&%s]\n", exp->nodes[0]->line, left,exp->nodes[0]->token);
+		}
 	}
 
 	else if(!strcmp(exp->token, "=")){
         	if (isDeclared(exp->nodes[0]->token)){
                 char *left = scopeSearch(exp->nodes[0]->token)->type;
                 char *right = EvaluateExp(exp->nodes[1]);
-            	if (strcmp(right,left) && strcmp(right,""))
-                    printf("Assignment Error mismatch: cannot assign %s to %s\n", right, left);
+            	if (strcmp(right,left) && strcmp(right,"NULL")){
+					ERROR++;
+                    printf("[line:%d] Assignment Error mismatch: cannot assign %s to %s\n", exp->line, right, left);
+				}
 				else
 					return left;
 			}
 		}
-	return "";
+	return "NULL";
 }
 
 
-int isSymbolExist(scopeNode* scope){
+void isSymbolExist(scopeNode* scope){
     scopeNode * current = scope;
     while(current != NULL){
         checkSymbols(current);
         current=current->next;
     }
-    return 1;
 }
 
 
-int checkSymbols(scopeNode* scope)
-{
+void checkSymbols(scopeNode* scope){
     symbolNode* s1 = scope->symbolTable;
-    symbolNode* s2;
-  while(s1!= NULL){
+	symbolNode* s2;
+ 	while(s1!= NULL){
         s2 = s1->next;
-        while (s2 != NULL)
-        {
+        while (s2 != NULL){
             if (!strcmp(s1->id, s2->id)){
-                if (s1->isFunc)
-                    printf ("scope [%s] level[%d]: re-declaration of function (%s)\n", scope->scopeName, scope->scopeLevel, s1->id);
-                else
-                    printf ("scope [%s] level[%d]: re-declaration of variable (%s)\n", scope->scopeName, scope->scopeLevel, s1->id);
-                return 0;
-                }
+                if (s1->isFunc){
+					ERROR++;
+                    printf ("Re-declaration of function (%s)\n", s1->id);
+				}
+                else{
+					ERROR++;
+                    printf ("Re-declaration of variable (%s)\n", s1->id);
+				}
+        	}
             s2 =s2->next;
         }
         s1 =s1->next;
     }
-    return 1;
 }
 
 
@@ -653,4 +726,3 @@ void printScopes(scopeNode *node){
 	}
     printf("num of scopes:{%d}\n",GlobalScope);
 }
-
