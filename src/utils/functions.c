@@ -722,6 +722,7 @@ void printInfo(node *root){
 
 void printSymbolTable(scopeNode *node)
 {  
+	
    scopeNode *currentScope = node;
    symbolNode *currentSymbol;
    while(currentScope != NULL){
@@ -734,7 +735,6 @@ void printSymbolTable(scopeNode *node)
 	currentScope=currentScope->next;       
 	}
 }
-
 
 void printScopes(scopeNode *node){
     scopeNode *current=node;

@@ -28,6 +28,7 @@ typedef struct scopeNode{
 	struct scopeNode *next;
 } scopeNode;
 
+
 node* mknode(char* token);
 void addNode(node** father, node* son);
 void printtree(node* tree, int tab);
