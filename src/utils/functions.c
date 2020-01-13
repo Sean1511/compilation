@@ -118,7 +118,7 @@ void semanticAnalysis(node* root){
 	isSymbolExist(topStack);
 	if (ERROR > 0)
 		printf("%d Errors found\n\n",ERROR);
-	else
+	else 
 		printInfo(root);
 }
 
@@ -610,6 +610,23 @@ char* EvaluateExp(node* exp){
 		else{
 			ERROR++;
 			printf("[line:%d] [%s] is not pointer\n", exp->nodes[0]->nodes[0]->line ,left);
+		}
+	}
+
+	else if(!strcmp(exp->token,"NEGATIVE")){
+        char* left;
+        left = EvaluateExp(exp->nodes[0]->nodes[0]);
+        if(!strcmp(left,"INT"))
+            return "INT";
+		else if(!strcmp(left,"REAL"))
+            return "REAL";
+		else if(!strcmp(left,"REAL*"))
+            return "REAL*";
+		else if(!strcmp(left,"INT*"))
+            return "INT*";
+		else{
+			ERROR++;
+			printf("[line:%d] can not perform (-) on [%s] \n", exp->nodes[0]->nodes[0]->line ,left);
 		}
 	}
 

@@ -103,7 +103,8 @@ extern int yydebug;
     DOUBLEQUOTES = 313,
     COLON = 314,
     XIF = 315,
-    MULL = 316
+    MIN = 316,
+    MULL = 317
   };
 #endif
 /* Tokens.  */
@@ -165,7 +166,8 @@ extern int yydebug;
 #define DOUBLEQUOTES 313
 #define COLON 314
 #define XIF 315
-#define MULL 316
+#define MIN 316
+#define MULL 317
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED

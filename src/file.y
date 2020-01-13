@@ -19,8 +19,8 @@ int yyerror(char *s);
 %left AND OR
 %left EQUAL GREATER GREATEREQUAL LESSEQUAL LESS NOTEQUAL 
 %left MINUS PLUS
-%left MULL MULTI DIVISION
-%expect 1
+%left MIN MULL MULTI DIVISION
+%expect 2
 %start s
 
 %%
@@ -153,6 +153,7 @@ expression:
     | id
     | char
     | string
+    | uminus %prec MIN
     | ptr %prec MULL
     ;
 
@@ -295,6 +296,11 @@ id:
 
 ptr:
     MULTI expression {$$ = mknode("PTR"); node* m = mknode("*"); addNode(&m, $2); addNode(&$$,m);}
+    ;
+
+uminus:
+    MINUS expression {$$ = mknode("NEGATIVE"); node* m = mknode("-"); addNode(&m, $2); addNode(&$$,m);}
+
 
 %%
 
