@@ -5,8 +5,8 @@ all:
 
 git:
 	git config --global user.name "Sean1511"
-	git commit -am "part 2 - final!"
-	git push -u origin Part2
+	git commit -am "part 3 start"
+	git push -u origin Part3
 	
 run:
 	$(MAKE) all
