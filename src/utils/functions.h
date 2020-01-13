@@ -29,6 +29,7 @@ typedef struct scopeNode{
 } scopeNode;
 
 
+
 node* mknode(char* token);
 void addNode(node** father, node* son);
 void printtree(node* tree, int tab);

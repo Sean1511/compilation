@@ -722,7 +722,6 @@ void printInfo(node *root){
 
 void printSymbolTable(scopeNode *node)
 {  
-	
    scopeNode *currentScope = node;
    symbolNode *currentSymbol;
    while(currentScope != NULL){
@@ -744,5 +743,4 @@ void printScopes(scopeNode *node){
 	}
     printf("num of scopes:{%d}\n",GlobalScope);
 }
-
 
