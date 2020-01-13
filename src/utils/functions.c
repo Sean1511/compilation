@@ -31,7 +31,7 @@ void printtree(node* tree, int tab) {
 		}
 		printf("(%s\n", token);
 	}
-	
+
 	else
 		tab -= 1;
 	if (tree->nodes) {
@@ -744,3 +744,5 @@ void printScopes(scopeNode *node){
 	}
     printf("num of scopes:{%d}\n",GlobalScope);
 }
+
+

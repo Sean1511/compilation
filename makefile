@@ -5,7 +5,8 @@ all:
 
 git:
 	git config --global user.name "Sean1511"
-	git commit -am "part 3"
+	git add .
+	git commit -m "part 3"
 	git push -u origin Part3
 	
 run:
