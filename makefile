@@ -4,7 +4,7 @@ all:
 	cc -o file y.tab.c -ll -Ly
 
 git:
-	git config --global user.name "Sean1511"
+	
 	git commit -am "part 3 start"
 	git push -u origin Part3
 	
