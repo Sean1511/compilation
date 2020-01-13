@@ -5,6 +5,8 @@
 scopeNode* topStack = NULL;
 int GlobalScope = 0;
 int ERROR = 0;
+int var = 0;
+int label = 1;
 
 
 void addNode(node** father, node* son) {
@@ -57,6 +59,8 @@ node* mknode(char* token) {
 	newnode->father = NULL;
 	newnode->count = 0;
 	newnode->line = 0;
+	newnode->var = NULL;
+	newnode->code = "";
 	return newnode;
 }
 
@@ -744,3 +748,48 @@ void printScopes(scopeNode *node){
     printf("num of scopes:{%d}\n",GlobalScope);
 }
 
+
+///////////////////////////////////////////// part3
+
+void addVar(node* node, char* var){
+	node->var = strdup(var);
+}
+
+void addCode(node* node, char* code){
+	char buffer[256] = "";
+	if (!strcmp(node->token, "MAIN")){
+		sprintf(buffer, "%s", "main:\n\tBeginFunc\n");
+		node->code = strdup(buffer);
+	}
+
+	if (!strcmp(node->token, "FUNCTION")){
+		sprintf(buffer, "%s:\n%s", node->nodes[0]->token,"\tBeginFunc\n");
+		node->code = strdup(buffer);
+	}
+
+	if (node->count > 0){
+		for (int i = 0; i< node->count; i++){
+			if (strcmp(node->nodes[i]->code,"")){
+				sprintf(buffer + strlen(buffer), "%s", node->nodes[i]->code);
+			}
+		}
+	}
+	sprintf(buffer + strlen(buffer), "%s", code);
+	node->code = strdup(buffer);
+
+	if (!strcmp(node->token, "MAIN") || !strcmp(node->token, "FUNCTION")){
+		sprintf(buffer + strlen(buffer), "\t%s", "EndFunc\n");
+		node->code = strdup(buffer);
+	}
+}
+
+void freshVar(node* node){
+	char new[10];
+	sprintf(new ,"t%d", var++);
+	node->var = strdup(new);
+}
+
+
+void print3AC(node* node){
+	printf("%s", node->code);
+}

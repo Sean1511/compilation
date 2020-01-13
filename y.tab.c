@@ -1721,7 +1721,7 @@ yyreduce:
     {
         case 2:
 #line 28 "src/file.y" /* yacc.c:1646  */
-    {semanticAnalysis((yyvsp[0]));}
+    {semanticAnalysis((yyvsp[0])); addCode((yyvsp[0]),""); print3AC((yyvsp[0]));}
 #line 1726 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1733,13 +1733,13 @@ yyreduce:
 
   case 4:
 #line 33 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode ("CODE"); addNode(&(yyval), (yyvsp[0]));}
+    {(yyval) = mknode ("CODE"); addNode(&(yyval), (yyvsp[0])); addCode((yyval),"");}
 #line 1738 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
 #line 37 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("MAIN"); addNode(&(yyval), (yyvsp[0]));}
+    {(yyval) = mknode("MAIN"); addNode(&(yyval), (yyvsp[0])); addCode((yyval),"");}
 #line 1744 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1751,7 +1751,7 @@ yyreduce:
 
   case 10:
 #line 51 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("s"); node* s = mknode ("FUNCTION"); s->line = (yyvsp[-4])->line; node* v = mknode("VOID"); addNode(&s,(yyvsp[-4])); addNode(&s,(yyvsp[-2])); addNode(&s, v); addNode(&s, (yyvsp[0])); addNode(&(yyval),s);}
+    {(yyval) = mknode("s"); node* s = mknode ("FUNCTION"); s->line = (yyvsp[-4])->line; node* v = mknode("VOID"); addNode(&s,(yyvsp[-4])); addNode(&s,(yyvsp[-2])); addNode(&s, v); addNode(&s, (yyvsp[0])); addCode(s, ""); addNode(&(yyval),s);}
 #line 1756 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1769,37 +1769,37 @@ yyreduce:
 
   case 13:
 #line 60 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,(yyvsp[-2]));addNode(&(yyval),v); addlist((yyval), (yyvsp[-1]));}
+    {(yyval) = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,(yyvsp[-2]));addNode(&(yyval),v); addlist((yyval), (yyvsp[-1])); addCode((yyval),"");}
 #line 1774 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
 #line 61 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode ("BODY"); addlist((yyval),(yyvsp[-1]));}
+    {(yyval) = mknode ("BODY"); addlist((yyval),(yyvsp[-1])); addCode((yyval),"");}
 #line 1780 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
 #line 62 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("BODY"); addlist((yyval), (yyvsp[-3])); node* v = mknode("VAR"); addlist(v,(yyvsp[-2]));addNode(&(yyval),v);addlist((yyval),(yyvsp[-1]));}
+    {(yyval) = mknode("BODY"); addlist((yyval), (yyvsp[-3])); node* v = mknode("VAR"); addlist(v,(yyvsp[-2]));addNode(&(yyval),v);addlist((yyval),(yyvsp[-1])); addCode((yyval),"");}
 #line 1786 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
 #line 63 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("BODY"); addlist((yyval), (yyvsp[-2])); addlist((yyval),(yyvsp[-1]));}
+    {(yyval) = mknode("BODY"); addlist((yyval), (yyvsp[-2])); addlist((yyval),(yyvsp[-1])); addCode((yyval),"");}
 #line 1792 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
 #line 64 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("BODY"); addlist((yyval), (yyvsp[-1]));}
+    {(yyval) = mknode("BODY"); addlist((yyval), (yyvsp[-1])); addCode((yyval),"");}
 #line 1798 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
 #line 65 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,(yyvsp[-1]));addNode(&(yyval),v);}
+    {(yyval) = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,(yyvsp[-1]));addNode(&(yyval),v); addCode((yyval),"");}
 #line 1804 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1895,7 +1895,7 @@ yyreduce:
 
   case 45:
 #line 120 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,(yyvsp[-2])); addNode(&s,(yyvsp[0])); addNode(&(yyval),s);}
+    {(yyval) = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,(yyvsp[-2])); addNode(&s,(yyvsp[0])); char buffer[20]; sprintf(buffer,"\t%s = %s\n", (yyvsp[-2])->var, (yyvsp[0])->var); addCode(s, buffer); addNode(&(yyval),s);}
 #line 1900 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1913,25 +1913,25 @@ yyreduce:
 
   case 48:
 #line 129 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("+"); (yyval)->line = (yyvsp[-2])->line; addNode(&(yyval),(yyvsp[-2])); addNode(&(yyval), (yyvsp[0]));}
+    {(yyval) = mknode("+"); (yyval)->line = (yyvsp[-2])->line; addNode(&(yyval),(yyvsp[-2])); addNode(&(yyval), (yyvsp[0])); freshVar((yyval)); char buffer[20]; sprintf(buffer, "\t%s = %s + %s\n", (yyval)->var, (yyvsp[-2])->var, (yyvsp[0])->var); addCode((yyval), buffer);}
 #line 1918 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
 #line 130 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("-"); (yyval)->line = (yyvsp[-2])->line; addNode(&(yyval),(yyvsp[-2])); addNode(&(yyval), (yyvsp[0]));}
+    {(yyval) = mknode("-"); (yyval)->line = (yyvsp[-2])->line; addNode(&(yyval),(yyvsp[-2])); addNode(&(yyval), (yyvsp[0])); freshVar((yyval)); char buffer[20]; sprintf(buffer, "\t%s = %s - %s\n", (yyval)->var, (yyvsp[-2])->var, (yyvsp[0])->var); addCode((yyval), buffer);}
 #line 1924 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
 #line 131 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("*"); (yyval)->line = (yyvsp[-2])->line; addNode(&(yyval),(yyvsp[-2])); addNode(&(yyval), (yyvsp[0]));}
+    {(yyval) = mknode("*"); (yyval)->line = (yyvsp[-2])->line; addNode(&(yyval),(yyvsp[-2])); addNode(&(yyval), (yyvsp[0])); freshVar((yyval)); char buffer[20]; sprintf(buffer, "\t%s = %s * %s\n", (yyval)->var, (yyvsp[-2])->var, (yyvsp[0])->var); addCode((yyval), buffer);}
 #line 1930 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
 #line 132 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode("/"); (yyval)->line = (yyvsp[-2])->line; addNode(&(yyval),(yyvsp[-2])); addNode(&(yyval), (yyvsp[0]));}
+    {(yyval) = mknode("/"); (yyval)->line = (yyvsp[-2])->line; addNode(&(yyval),(yyvsp[-2])); addNode(&(yyval), (yyvsp[0])); freshVar((yyval)); char buffer[20]; sprintf(buffer, "\t%s = %s / %s\n", (yyval)->var, (yyvsp[-2])->var, (yyvsp[0])->var); addCode((yyval), buffer);}
 #line 1936 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -2321,43 +2321,43 @@ yyreduce:
 
   case 133:
 #line 270 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode(yytext); (yyval)->val_type = "CHAR"; (yyval)->line = linecount;}
+    {(yyval) = mknode(yytext); (yyval)->val_type = "CHAR"; (yyval)->line = linecount; addVar((yyval) ,yytext);}
 #line 2326 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 134:
 #line 274 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode(yytext); (yyval)->val_type = "INT"; (yyval)->line = linecount;}
+    {(yyval) = mknode(yytext); (yyval)->val_type = "INT"; (yyval)->line = linecount; addVar((yyval) ,yytext);}
 #line 2332 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 135:
 #line 278 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode(yytext); (yyval)->val_type = "REAL"; (yyval)->line = linecount;}
+    {(yyval) = mknode(yytext); (yyval)->val_type = "REAL"; (yyval)->line = linecount; addVar((yyval) ,yytext);}
 #line 2338 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 136:
 #line 282 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode(yytext); (yyval)->val_type = "HEX"; (yyval)->line = linecount;}
+    {(yyval) = mknode(yytext); (yyval)->val_type = "HEX"; (yyval)->line = linecount; addVar((yyval) ,yytext);}
 #line 2344 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 137:
 #line 286 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode(yytext); (yyval)->val_type = "BOOL"; (yyval)->line = linecount;}
+    {(yyval) = mknode(yytext); (yyval)->val_type = "BOOL"; (yyval)->line = linecount; addVar((yyval) ,yytext);}
 #line 2350 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 138:
 #line 290 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode(yytext); (yyval)->val_type = "BOOL"; (yyval)->line = linecount;}
+    {(yyval) = mknode(yytext); (yyval)->val_type = "BOOL"; (yyval)->line = linecount; addVar((yyval) ,yytext);}
 #line 2356 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 139:
 #line 294 "src/file.y" /* yacc.c:1646  */
-    {(yyval) = mknode(yytext); (yyval)->val_type = "ID"; (yyval)->line = linecount;}
+    {(yyval) = mknode(yytext); (yyval)->val_type = "ID"; (yyval)->line = linecount; addVar((yyval), yytext);}
 #line 2362 "y.tab.c" /* yacc.c:1646  */
     break;
 
@@ -2608,6 +2608,7 @@ yyreturn:
 int main(){
     return yyparse();
 }
+
 
 int yyerror(char* s){
     printf("%s: found line:%d token [%s]\n", s, linecount, yytext);

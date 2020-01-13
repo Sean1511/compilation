@@ -8,6 +8,8 @@ typedef struct node {
 	char* val_type;
 	int line;
 	char* father;
+	char* var;
+	char* code;
 } node;
 
 typedef struct symbolNode{
@@ -29,13 +31,15 @@ typedef struct scopeNode{
 } scopeNode;
 
 
-
+//part1
 node* mknode(char* token);
 void addNode(node** father, node* son);
 void printtree(node* tree, int tab);
 void mknodelist(node* father, node* son);
 node* integrate(char* token, node* one, node* two);
 void addlist(node* root, node* arr);
+
+//part2
 void semanticAnalysis(node* root);
 void pushStat(node* root, int level);
 void pushScopeToStack(scopeNode** topStack, char* name, node* params, node** statments, int level, int stat_size);
@@ -58,4 +62,11 @@ void checkString(node* strNode, char* assType);
 void printScopes(struct scopeNode *node);
 void printSymbolTable(struct scopeNode *node);
 void printInfo(node *root);
+
+// part3
+void addVar(node* node, char* var);
+void addCode(node* node, char* code);
+void freshVar(node* node);
+void print3AC(node* node);
+
 #endif 

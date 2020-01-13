@@ -25,16 +25,16 @@ int yyerror(char *s);
 
 %%
 s:
-    code {semanticAnalysis($1);}
+    code {semanticAnalysis($1); addCode($1,""); print3AC($1);}
     ;
 
 code:
     functions Main {$$ = mknode ("CODE"); addlist($$, $1); addNode(&$$, $2);}
-    | Main {$$ = mknode ("CODE"); addNode(&$$, $1);} 
+    | Main {$$ = mknode ("CODE"); addNode(&$$, $1); addCode($$,"");} 
     ;
 
 Main: 
-    FUNCTION VOID MAIN LEFTPAREN RIGHTPAREN void_block {$$ = mknode("MAIN"); addNode(&$$, $6);} 
+    FUNCTION VOID MAIN LEFTPAREN RIGHTPAREN void_block {$$ = mknode("MAIN"); addNode(&$$, $6); addCode($$,"");} 
     ;
 
 functions:
@@ -48,7 +48,7 @@ function:
     ;
 
 void_func: 
-    FUNCTION VOID id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); s->line = $3->line; node* v = mknode("VOID"); addNode(&s,$3); addNode(&s,$5); addNode(&s, v); addNode(&s, $7); addNode(&$$,s);}
+    FUNCTION VOID id LEFTPAREN args RIGHTPAREN void_block {$$ = mknode("s"); node* s = mknode ("FUNCTION"); s->line = $3->line; node* v = mknode("VOID"); addNode(&s,$3); addNode(&s,$5); addNode(&s, v); addNode(&s, $7); addCode(s, ""); addNode(&$$,s);}
     ; 
 
 value_func: 
@@ -57,12 +57,12 @@ value_func:
 
  void_block:
     LEFTBRACE RIGHTBRACE {$$ = mknode ("BODY"); }
-    |LEFTBRACE declerations statments RIGHTBRACE {$$ = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,$2);addNode(&$$,v); addlist($$, $3);}
-    |LEFTBRACE statments RIGHTBRACE {$$ = mknode ("BODY"); addlist($$,$2);}
-    |LEFTBRACE functions declerations statments RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); node* v = mknode("VAR"); addlist(v,$3);addNode(&$$,v);addlist($$,$4);}
-    |LEFTBRACE functions statments RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); addlist($$,$3);}
-    |LEFTBRACE functions RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2);}
-    |LEFTBRACE declerations RIGHTBRACE {$$ = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,$2);addNode(&$$,v);}
+    |LEFTBRACE declerations statments RIGHTBRACE {$$ = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,$2);addNode(&$$,v); addlist($$, $3); addCode($$,"");}
+    |LEFTBRACE statments RIGHTBRACE {$$ = mknode ("BODY"); addlist($$,$2); addCode($$,"");}
+    |LEFTBRACE functions declerations statments RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); node* v = mknode("VAR"); addlist(v,$3);addNode(&$$,v);addlist($$,$4); addCode($$,"");}
+    |LEFTBRACE functions statments RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); addlist($$,$3); addCode($$,"");}
+    |LEFTBRACE functions RIGHTBRACE {$$ = mknode("BODY"); addlist($$, $2); addCode($$,"");}
+    |LEFTBRACE declerations RIGHTBRACE {$$ = mknode ("BODY"); node* v = mknode("VAR"); addlist(v,$2);addNode(&$$,v); addCode($$,"");}
     ;
     
 value_block:
@@ -77,7 +77,7 @@ value_block:
  
 statments:
     statments statment {$$ = integrate("", $1, $2);}
-    |statment
+    |statment 
     ;
     
 statment:
@@ -117,7 +117,7 @@ do_while:
     DO block WHILE LEFTPAREN expression RIGHTPAREN SEMICOLON {$$ = mknode("s"); node* s = mknode("DO-WHILE"); s->line = $5->line; addlist(s, $2); s->nodes[0]->father = "DO-WHILE"; addNode(&s, $5); addNode(&$$,s);}
 
 stat_assignment:
-    id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
+    id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); char buffer[20]; sprintf(buffer,"\t%s = %s\n", $1->var, $3->var); addCode(s, buffer); addNode(&$$,s);}
     | ptr ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
     ;
 
@@ -126,10 +126,10 @@ string_assignment:
     ;
 
 expression:
-    expression PLUS expression {$$ = mknode("+"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
-    | expression MINUS expression {$$ = mknode("-"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
-    | expression MULTI expression {$$ = mknode("*"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);} 
-    | expression DIVISION expression {$$ = mknode("/"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
+    expression PLUS expression {$$ = mknode("+"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s + %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
+    | expression MINUS expression {$$ = mknode("-"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s - %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
+    | expression MULTI expression {$$ = mknode("*"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s * %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);} 
+    | expression DIVISION expression {$$ = mknode("/"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s / %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
     | expression EQUAL expression { $$ = mknode ("=="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
     | expression GREATER expression { $$ = mknode (">"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
     | expression GREATEREQUAL expression { $$ = mknode (">="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);}
@@ -267,31 +267,31 @@ string:
     ;
 
 char:
-    CHARACTER {$$ = mknode(yytext); $$->val_type = "CHAR"; $$->line = linecount;}
+    CHARACTER {$$ = mknode(yytext); $$->val_type = "CHAR"; $$->line = linecount; addVar($$ ,yytext);}
     ;
 
 int:
-    INTEGER {$$ = mknode(yytext); $$->val_type = "INT"; $$->line = linecount;}
+    INTEGER {$$ = mknode(yytext); $$->val_type = "INT"; $$->line = linecount; addVar($$ ,yytext);}
     ;
 
 real:
-    REAL_D {$$ = mknode(yytext); $$->val_type = "REAL"; $$->line = linecount;}
+    REAL_D {$$ = mknode(yytext); $$->val_type = "REAL"; $$->line = linecount; addVar($$ ,yytext);}
     ;
 
 hex:
-    HEX {$$ = mknode(yytext); $$->val_type = "HEX"; $$->line = linecount;}
+    HEX {$$ = mknode(yytext); $$->val_type = "HEX"; $$->line = linecount; addVar($$ ,yytext);}
     ;
 
 true:
-    BOOLTRUE {$$ = mknode(yytext); $$->val_type = "BOOL"; $$->line = linecount;}
+    BOOLTRUE {$$ = mknode(yytext); $$->val_type = "BOOL"; $$->line = linecount; addVar($$ ,yytext);}
     ;
 
 false:
-    BOOLFALSE {$$ = mknode(yytext); $$->val_type = "BOOL"; $$->line = linecount;}
+    BOOLFALSE {$$ = mknode(yytext); $$->val_type = "BOOL"; $$->line = linecount; addVar($$ ,yytext);}
     ;
 
 id: 
-    ID {$$ = mknode(yytext); $$->val_type = "ID"; $$->line = linecount;}
+    ID {$$ = mknode(yytext); $$->val_type = "ID"; $$->line = linecount; addVar($$, yytext);}
     ;
 
 ptr:
