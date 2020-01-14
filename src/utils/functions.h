@@ -68,5 +68,14 @@ void addVar(node* node, char* var);
 void addCode(node* node, char* code);
 void freshVar(node* node);
 void print3AC(node* node);
-
+char* freshLabel();
+void genIF(node* nodeIF);
+void genIF_ELSE(node* nodeIF_ELSE);
+void genWHILE(node* nodeWHILE);
+void genDO_WHILE(node* nodeWHILE);
+void genFOR(node* nodeWHILE);
+void genFUNC_CALL(node* node_FC, int flag);
+int calcPop(node* args);
+void func(node* node, char* buffer, int flag);
+void genAssignment(node* node);
 #endif 

@@ -756,7 +756,7 @@ void addVar(node* node, char* var){
 }
 
 void addCode(node* node, char* code){
-	char buffer[256] = "";
+	char buffer[10000] = "";
 	if (!strcmp(node->token, "MAIN")){
 		sprintf(buffer, "%s", "main:\n\tBeginFunc\n");
 		node->code = strdup(buffer);
@@ -789,7 +789,171 @@ void freshVar(node* node){
 	node->var = strdup(new);
 }
 
+char* freshLabel(){
+	char new[10] = "";
+	sprintf(new ,"L%d", label++);
+	char* L = strdup(new);
+	return L;
+}
 
 void print3AC(node* node){
 	printf("%s", node->code);
+}
+
+void genIF(node* nodeIF){
+	char buffer[10000] = "";
+	if (strcmp(nodeIF->nodes[0]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeIF->nodes[0]->code);
+	}
+	char* L = freshLabel();
+	sprintf(buffer + strlen(buffer), "\tifz %s Goto %s\n", nodeIF->nodes[0]->var, L);
+	if (strcmp(nodeIF->nodes[1]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeIF->nodes[1]->code);
+	}
+	sprintf(buffer + strlen(buffer), "%s:", L);
+	nodeIF->code = strdup(buffer);
+}
+
+void genIF_ELSE(node* nodeIF_ELSE){
+	char buffer[10000] = "";
+	if (strcmp(nodeIF_ELSE->nodes[0]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeIF_ELSE->nodes[0]->code);
+	}
+	char* L1 = freshLabel();
+	sprintf(buffer + strlen(buffer), "\tifz %s Goto %s\n", nodeIF_ELSE->nodes[0]->var, L1);
+	if (strcmp(nodeIF_ELSE->nodes[1]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeIF_ELSE->nodes[1]->code);
+	}
+	char* L2 = freshLabel();
+	sprintf(buffer + strlen(buffer), "\tGoto %s\n",  L2);
+	sprintf(buffer + strlen(buffer), "%s:", L1);
+	if (strcmp(nodeIF_ELSE->nodes[2]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeIF_ELSE->nodes[2]->code);
+	}
+	sprintf(buffer + strlen(buffer), "%s:", L2);
+	nodeIF_ELSE->code = strdup(buffer);
+}
+
+void genWHILE(node* nodeWHILE){
+	char buffer[10000] = "";
+	char* L1 = freshLabel();
+	sprintf(buffer, "%s:", L1);
+	if (strcmp(nodeWHILE->nodes[0]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[0]->code);
+	}
+	char* L2 = freshLabel();
+	sprintf(buffer + strlen(buffer), "\tifz %s Goto %s\n", nodeWHILE->nodes[0]->var, L2);
+	if (strcmp(nodeWHILE->nodes[1]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[1]->code);
+	}
+	sprintf(buffer + strlen(buffer), "\tGoto %s\n",  L1);
+	sprintf(buffer + strlen(buffer), "%s:", L2);
+	nodeWHILE->code = strdup(buffer);
+}
+
+void genDO_WHILE(node* nodeWHILE){
+	char buffer[10000] = "";
+	char* L1 = freshLabel();
+	char* L2 = freshLabel();
+	sprintf(buffer, "%s:", L1);
+	if (strcmp(nodeWHILE->nodes[0]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[0]->code);
+	}
+	if (strcmp(nodeWHILE->nodes[1]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[1]->code);
+	}
+	sprintf(buffer + strlen(buffer), "\tifz %s Goto %s\n", nodeWHILE->nodes[1]->var, L2);
+	sprintf(buffer + strlen(buffer), "\tGoto %s\n",  L1);
+	sprintf(buffer + strlen(buffer), "%s:", L2);
+	nodeWHILE->code = strdup(buffer);
+}
+
+void genFOR(node* nodeWHILE){
+	char buffer[10000] = "";
+	char* L1 = freshLabel();
+	if (strcmp(nodeWHILE->nodes[0]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[0]->code);
+		sprintf(buffer + strlen(buffer), "%s:", L1);
+		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[1]->code);
+		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[2]->code);
+	}
+	char* L2 = freshLabel();
+	sprintf(buffer + strlen(buffer), "\tifz %s Goto %s\n", nodeWHILE->nodes[1]->var, L2);
+	sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[3]->code);
+	sprintf(buffer + strlen(buffer), "\tGoto %s\n",  L1);
+	sprintf(buffer + strlen(buffer), "%s:", L2);
+	nodeWHILE->code = strdup(buffer);
+}
+
+
+
+void genFUNC_CALL(node* node_FC, int flag){
+	char buffer[10000] = "";
+	if (node_FC->nodes[1]->count > 0){
+		for (int i = 0;i < node_FC->nodes[1]->count;i++){
+			if (strcmp(node_FC->nodes[1]->nodes[i]->val_type, "ID")){
+				freshVar(node_FC->nodes[1]->nodes[i]);
+				sprintf(buffer + strlen(buffer), "\t%s = %s\n", node_FC->nodes[1]->nodes[i]->var, node_FC->nodes[1]->nodes[i]->token);
+			}
+			sprintf(buffer + strlen(buffer), "\tPushParam %s\n", node_FC->nodes[1]->nodes[i]->var);
+		}
+		func(node_FC->nodes[0], buffer, flag);
+		node_FC->var = node_FC->nodes[0]->var;
+		sprintf(buffer + strlen(buffer), "\tPopParams %d\n", calcPop(node_FC->nodes[1]));
+		node_FC->code = strdup(buffer);
+	}
+	else {
+		func(node_FC->nodes[0], buffer, flag);
+		node_FC->var = node_FC->nodes[0]->var;
+		node_FC->code = strdup(buffer);
+	}
+}
+
+
+
+int calcPop(node* args){
+	int count = 0;
+	for(int i = 0; i < args->count; i++){
+		if (!strcmp(args->nodes[i]->val_type, "INT") || !strcmp(args->nodes[i]->val_type, "BOOL"))
+			count+=4;
+		else if (!strcmp(args->nodes[i]->val_type, "INT*") || !strcmp(args->nodes[i]->val_type, "CHAR*") || !strcmp(args->nodes[i]->val_type, "REAL*") || !strcmp(args->nodes[i]->val_type, "REAL"))
+			count+=8;
+		else if (!strcmp(args->nodes[i]->val_type, "CHAR"))
+			count+=1;
+	}
+	return count;
+}
+
+
+void func(node* node, char* buffer, int flag){
+	if (!strcmp(node->val_type, "VOID")){
+		sprintf(buffer + strlen(buffer), "\tLCall %s\n", node->token);
+	} 
+	else{
+		freshVar(node);
+		if (flag)
+			sprintf(buffer + strlen(buffer), "\t%s = LCall %s\n", node->var, node->token);
+		else
+			sprintf(buffer + strlen(buffer), "\tLCall %s\n", node->token);
+	}
+}
+
+
+void genAssignment(node* node){
+	char buffer[20] ="";
+	if (node->nodes[1]->count > 0) {
+		sprintf(buffer,"\t%s = %s\n", node->nodes[0]->var, node->nodes[1]->var);
+	}
+	else {
+		if (!strcmp(node->nodes[1]->val_type, "ID")){
+			sprintf(buffer,"\t%s = %s\n", node->nodes[0]->var, node->nodes[1]->var);
+		}
+
+		else {
+			freshVar(node->nodes[1]);
+			sprintf(buffer,"\t%s = %s\n", node->nodes[1]->var, node->nodes[1]->token);
+			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->nodes[0]->token, node->nodes[1]->var);
+		}
+	}
+	addCode(node, buffer);
 }

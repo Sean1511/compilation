@@ -1,12 +1,21 @@
-function void foo(){
-    var int x;
-    x = 5 + 9;
+function int foo (real x)
+{
+    var int a;
+    a = 23;
+    if (a == 23)
+        a = 10;
+    else 
+        a = 19;
+    
+    return a;
 }
 
-function void main() 
+function void main()
 {
     var int a, b;
-    a = 5 * 7;
-    a = 6 + 3 / 4;
-    b = a - 6;
+    a = 0;
+    while (a < 10){
+        b = foo(3.14);
+        a = a + b;
+    }
 }
