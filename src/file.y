@@ -118,27 +118,27 @@ do_while:
 
 stat_assignment:
     id ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); genAssignment(s); addNode(&$$,s);}
-    | ptr ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); addNode(&$$,s);}
+    | ptr ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); s->line = linecount; addNode(&s,$1); addNode(&s,$3); genPTR(s); addNode(&$$,s);}
     ;
 
 string_assignment:
-    id LEFTBRACKET expression RIGHTBRACKET ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); node* index = mknode("INDEX"); addNode(&index,$3); addNode(&$1, index); addNode(&s, $1); addNode(&s,$6); addNode(&$$,s);}
+    id LEFTBRACKET expression RIGHTBRACKET ASSIGNMENT expression {$$ = mknode("s"); node* s = mknode("="); node* index = mknode("INDEX"); addNode(&index,$3); addNode(&$1, index); addNode(&s, $1); addNode(&s,$6); genSTRassignment(s); addNode(&$$,s);}
     ;
 
 expression:
-    expression PLUS expression {$$ = mknode("+"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s + %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression MINUS expression {$$ = mknode("-"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s - %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression MULTI expression {$$ = mknode("*"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s * %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);} 
-    | expression DIVISION expression {$$ = mknode("/"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s / %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression EQUAL expression { $$ = mknode ("=="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s == %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression GREATER expression { $$ = mknode (">"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s > %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression GREATEREQUAL expression { $$ = mknode (">="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s >= %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression LESS expression { $$ = mknode ("<"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s < %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression LESSEQUAL expression { $$ = mknode ("<="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s <= %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression NOTEQUAL expression { $$ = mknode ("!="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3);freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s != %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);}
-    | expression AND expression {$$ = mknode("&&"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$,$3);freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s && %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);} 
-    | expression OR expression {$$ = mknode("||"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$,$3);freshVar($$); char buffer[20]; sprintf(buffer, "\t%s = %s || %s\n", $$->var, $1->var, $3->var); addCode($$, buffer);} 
-    | NOT expression {$$ = mknode ("NOT"); $$->line = $2->line; addNode(&$$,$2);}
+    expression PLUS expression {$$ = mknode("+"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression MINUS expression {$$ = mknode("-"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression MULTI expression {$$ = mknode("*"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);} 
+    | expression DIVISION expression {$$ = mknode("/"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression EQUAL expression { $$ = mknode ("=="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression GREATER expression { $$ = mknode (">"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression GREATEREQUAL expression { $$ = mknode (">="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression LESS expression { $$ = mknode ("<"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression LESSEQUAL expression { $$ = mknode ("<="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression NOTEQUAL expression { $$ = mknode ("!="); $$->line = $1->line; addNode(&$$,$1); addNode(&$$, $3); genExprssion($$);}
+    | expression AND expression {$$ = mknode("&&"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$,$3); genExprssion($$);} 
+    | expression OR expression {$$ = mknode("||"); $$->line = $1->line; addNode(&$$,$1); addNode(&$$,$3); genExprssion($$);} 
+    | NOT expression {$$ = mknode ("NOT"); $$->line = $2->line; freshVar($$); char buffer[50]; sprintf(buffer, "\t%s = !%s\n", $$->var, $2->var); addNode(&$$,$2); addCode($$, buffer);}
     | LEFTPAREN expression RIGHTPAREN {$$ = $2; $$->line = $2->line;}
     | ABSUOLUTE expression ABSUOLUTE {$$ = mknode("LEN OF"); addNode(&$$,$2);}
     | ADDRESS id {$$ = mknode("&"); addNode(&$$, $2);}
@@ -179,13 +179,13 @@ func:
 block:
     LEFTBRACE RIGHTBRACE {$$ =  mknode("BLOCK"); addCode($$, "");}
     |LEFTBRACE statments RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); addlist(s,$2); addCode(s, ""); addNode(&$$,s);}
-    |LEFTBRACE declerations RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); node* v = mknode("VAR"); addlist(v,$2); addNode(&s,v); addCode(s, ""); addNode(&$$,s);}
-    |LEFTBRACE declerations statments RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); node* v = mknode("VAR"); addlist(v,$2); addNode(&s,v); addlist(s, $3); addCode(s, ""); addNode(&$$,s);}    
+    |LEFTBRACE declerations RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); node* v = mknode("VAR"); addlist(v,$2); addNode(&s,v); addCode(v,""); addCode(s, ""); addNode(&$$,s);}
+    |LEFTBRACE declerations statments RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); node* v = mknode("VAR"); addlist(v,$2); addNode(&s,v); addlist(s, $3); addCode(v,""); addCode(s, ""); addNode(&$$,s);}    
     
     |LEFTBRACE RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("BLOCK"); node* ret = mknode("RET"); addNode(&ret,$3); char buffer[50]; sprintf(buffer, "%s %s\n", "\tReturn", $3->var); addCode(ret, buffer); addNode(&$$,ret); addCode($$, "");}
     |LEFTBRACE statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); addlist(s,$2);node* ret = mknode("RET"); addNode(&ret,$4); char buffer[50]; sprintf(buffer, "%s %s\n", "\tReturn", $4->var); addCode(ret, buffer); addNode(&s,ret); addCode(s, ""); addNode(&$$,s);}
-    |LEFTBRACE declerations RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); node* v = mknode("VAR"); addlist(v,$2); addNode(&s,v); node* ret = mknode("RET"); addNode(&ret,$4); char buffer[50]; sprintf(buffer, "%s %s\n", "\tReturn", $4->var); addCode(ret, buffer); addNode(&s,ret); addCode(s, ""); addNode(&$$,s);}
-    |LEFTBRACE declerations statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); node* v = mknode("VAR"); addlist(v,$2); addNode(&s,v); addlist(s, $3); node* ret = mknode("RET"); addNode(&ret,$5); char buffer[50]; sprintf(buffer, "%s %s\n", "\tReturn", $5->var); addCode(ret, buffer); addNode(&s,ret); addCode(s, ""); addNode(&$$,s);}  
+    |LEFTBRACE declerations RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); node* v = mknode("VAR"); addlist(v,$2); addNode(&s,v); node* ret = mknode("RET"); addNode(&ret,$4); char buffer[50]; sprintf(buffer, "%s %s\n", "\tReturn", $4->var); addCode(ret, buffer); addNode(&s,ret); addCode(v,""); addCode(s, ""); addNode(&$$,s);}
+    |LEFTBRACE declerations statments RETURN expression SEMICOLON RIGHTBRACE {$$ = mknode("s"); node* s = mknode("BLOCK"); node* v = mknode("VAR"); addlist(v,$2); addNode(&s,v); addlist(s, $3); node* ret = mknode("RET"); addNode(&ret,$5); char buffer[50]; sprintf(buffer, "%s %s\n", "\tReturn", $5->var); addCode(ret, buffer); addNode(&s,ret); addCode(v,""); addCode(s, ""); addNode(&$$,s);}  
     ;   
 
 func_type:
@@ -226,13 +226,13 @@ var_decleration:
     ;
 
 string_decleration:
-    STRING string_params SEMICOLON {$$ = mknode("s"); node* s = mknode("STRING"); addlist(s,$2); addNode(&$$,s);}
+    STRING string_params SEMICOLON {$$ = mknode("s"); node* s = mknode("STRING"); addlist(s,$2); genSTRdecASS(s); addNode(&$$,s);}
     ;
 
 string_params:
     id LEFTBRACKET expression RIGHTBRACKET {$$ = mknode("s"); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&$$,$1);}
     |id LEFTBRACKET expression RIGHTBRACKET COMMA string_params {$$ = mknode("s"); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&$$,$1); addlist($$,$6);}
-    |id LEFTBRACKET expression RIGHTBRACKET ASSIGNMENT expression {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6);addNode(&$$,ass);}
+    |id LEFTBRACKET expression RIGHTBRACKET ASSIGNMENT expression {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6); addNode(&$$,ass);}
     |id LEFTBRACKET expression RIGHTBRACKET ASSIGNMENT expression COMMA string_params {$$ = mknode("s"); node* ass = mknode("="); node* len = mknode("LENGTH"); addNode(&len,$3); addNode(&$1,len); addNode(&ass,$1); addNode(&ass,$6);addNode(&$$,ass); addlist($$,$8);}
     ; 
 
@@ -245,12 +245,17 @@ params_decleration:
     ;
 
 variables:
+    variables COMMA variable {$$ = integrate("", $1, $3);}
+    | variable
+    ;
+
+variable:
     id 
-    |id COMMA variables {$$ = mknode("s"); addNode(&$$,$1); addlist($$,$3);}
+    //|id COMMA variables {$$ = mknode("s"); addNode(&$$,$1); addlist($$,$3);}
     |id ASSIGNMENT expression {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addNode(&s,$3); genAssignment(s); addNode(&$$,s); }
-    |id ASSIGNMENT expression COMMA variables {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addNode(&s,$3); genAssignment(s); addNode(&$$,s); addlist($$,$5);}
+    //|id ASSIGNMENT expression COMMA variables {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addNode(&s,$3); genAssignment(s); addNode(&$$,s); addlist($$,$5);}
     |id ASSIGNMENT func_call {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addlist(s,$3); genAssignment(s); addNode(&$$,s);}
-    |id ASSIGNMENT func_call COMMA variables {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addlist(s,$3); genAssignment(s); addNode(&$$,s); addlist($$,$5);}
+    //|id ASSIGNMENT func_call COMMA variables {$$ = mknode("s"); node* s= mknode("="); addNode(&s,$1); addlist(s,$3); genAssignment(s); addNode(&$$,s); addlist($$,$5);}
     ;
 
 params:
@@ -266,7 +271,7 @@ csnull:
     ;
 
 string:
-    STR {$$ = mknode(yytext); $$->val_type = "STRING"; $$->line = linecount;}
+    STR {$$ = mknode(yytext); $$->val_type = "STRING"; $$->line = linecount; addVar($$ ,yytext);}
     ;
 
 char:
@@ -298,7 +303,7 @@ id:
     ;
 
 ptr:
-    MULTI expression {$$ = mknode("PTR"); node* m = mknode("*"); addNode(&m, $2); addNode(&$$,m);}
+    MULTI expression {$$ = mknode("PTR"); node* m = mknode("*"); addNode(&m, $2); addVar($$, $2->var); addNode(&$$,m);}
     ;
 
 uminus:

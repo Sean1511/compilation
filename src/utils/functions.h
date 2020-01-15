@@ -78,4 +78,9 @@ void genFUNC_CALL(node* node_FC, int flag);
 int calcPop(node* args);
 void func(node* node, char* buffer, int flag);
 void genAssignment(node* node);
+void genExprssion(node* node);
+void genSTRassignment(node* STRnode);
+void genSTRdecASS(node* STRnode);
+void genPTR(node* node);
+void STRtoSTR(node* STRnode);
 #endif 

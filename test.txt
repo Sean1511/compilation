@@ -1,4 +1,4 @@
-function int foo (real x)
+/*function int foo (real x)
 {
     var int a;
     a = 23;
@@ -18,4 +18,24 @@ function void main()
         b = foo(3.14);
         a = a + b;
     }
+}*/
+
+
+/*function void main()
+{
+    var int x;
+    var int* p = &x, t;
+    var int* r = t;
+    x = *p;
+    *p = x;
+    p = &x;
+    p = t;
+    *t = *p;
+}*/
+
+
+function void main(){
+    var char* x;
+	string y[10];
+	y[5] = *x;    
 }

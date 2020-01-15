@@ -778,7 +778,7 @@ void addCode(node* node, char* code){
 	node->code = strdup(buffer);
 
 	if (!strcmp(node->token, "MAIN") || !strcmp(node->token, "FUNCTION")){
-		sprintf(buffer + strlen(buffer), "\t%s", "EndFunc\n");
+		sprintf(buffer + strlen(buffer), "\t%s", "EndFunc\n\n");
 		node->code = strdup(buffer);
 	}
 }
@@ -868,21 +868,22 @@ void genDO_WHILE(node* nodeWHILE){
 	nodeWHILE->code = strdup(buffer);
 }
 
-void genFOR(node* nodeWHILE){
+void genFOR(node* nodeFOR){
 	char buffer[10000] = "";
 	char* L1 = freshLabel();
-	if (strcmp(nodeWHILE->nodes[0]->code,"")){
-		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[0]->code);
+	if (strcmp(nodeFOR->nodes[0]->code,"")){
+		sprintf(buffer + strlen(buffer), "%s", nodeFOR->nodes[0]->code);
 		sprintf(buffer + strlen(buffer), "%s:", L1);
-		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[1]->code);
-		sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[2]->code);
+		sprintf(buffer + strlen(buffer), "%s", nodeFOR->nodes[1]->code);
+		
 	}
 	char* L2 = freshLabel();
-	sprintf(buffer + strlen(buffer), "\tifz %s Goto %s\n", nodeWHILE->nodes[1]->var, L2);
-	sprintf(buffer + strlen(buffer), "%s", nodeWHILE->nodes[3]->code);
+	sprintf(buffer + strlen(buffer), "\tifz %s Goto %s\n", nodeFOR->nodes[1]->var, L2);
+	sprintf(buffer + strlen(buffer), "%s", nodeFOR->nodes[3]->code);
+	sprintf(buffer + strlen(buffer), "%s", nodeFOR->nodes[2]->code);
 	sprintf(buffer + strlen(buffer), "\tGoto %s\n",  L1);
 	sprintf(buffer + strlen(buffer), "%s:", L2);
-	nodeWHILE->code = strdup(buffer);
+	nodeFOR->code = strdup(buffer);
 }
 
 
@@ -940,9 +941,28 @@ void func(node* node, char* buffer, int flag){
 
 
 void genAssignment(node* node){
-	char buffer[20] ="";
+	char buffer[10000] ="";
 	if (node->nodes[1]->count > 0) {
-		sprintf(buffer,"\t%s = %s\n", node->nodes[0]->var, node->nodes[1]->var);
+		if (!strcmp(node->nodes[1]->nodes[0]->token, "INDEX")){
+			freshVar(node->nodes[1]->nodes[0]);
+			sprintf(buffer,"\t%s = &%s\n", node->nodes[1]->nodes[0]->var, node->nodes[1]->token);
+			freshVar(node);
+			sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", node->var, node->nodes[1]->nodes[0]->var, node->nodes[1]->nodes[0]->nodes[0]->var);
+			sprintf(buffer + strlen(buffer),"\t%s = *%s\n", node->nodes[0]->var, node->var);
+		}
+
+		else if (!strcmp(node->nodes[1]->token, "LEN OF")){
+			freshVar(node->nodes[1]);
+			sprintf(buffer,"\t%s = Sizeof(%s)\n", node->nodes[1]->var, node->nodes[1]->nodes[0]->token);
+			sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->nodes[0]->var, node->nodes[1]->var);
+		}
+
+		else if (!strcmp(node->nodes[0]->token, "PTR") || !strcmp(node->nodes[1]->token, "PTR") || !strcmp(node->nodes[1]->token, "&")){
+			genPTR(node);
+		}
+
+		else
+			sprintf(buffer,"\t%s = %s\n", node->nodes[0]->var, node->nodes[1]->var);
 	}
 	else {
 		if (!strcmp(node->nodes[1]->val_type, "ID")){
@@ -956,4 +976,114 @@ void genAssignment(node* node){
 		}
 	}
 	addCode(node, buffer);
+}
+
+
+void genExprssion(node* node){
+	char buffer[10000] ="";
+	freshVar(node);
+	sprintf(buffer,"\t%s = %s %s %s\n", node->var, node->nodes[0]->var, node->token, node->nodes[1]->var);
+	addCode(node, buffer);
+}
+
+
+void genSTRassignment(node* STRnode){
+	char buffer[10000] ="";
+	if (strcmp(STRnode->nodes[1]->nodes[0]->token, "INDEX")){
+		if (STRnode->nodes[0]->nodes[0]->nodes[0]->count > 0)
+			sprintf(buffer,"%s", STRnode->nodes[0]->nodes[0]->nodes[0]->code);
+		freshVar(STRnode->nodes[0]->nodes[0]);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", STRnode->nodes[0]->nodes[0]->var, STRnode->nodes[0]->var);
+		freshVar(STRnode);
+		sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", STRnode->var, STRnode->nodes[0]->nodes[0]->var, STRnode->nodes[0]->nodes[0]->nodes[0]->var);
+		sprintf(buffer + strlen(buffer),"\t*%s = %s\n", STRnode->var, STRnode->nodes[1]->var);
+		addCode(STRnode, buffer);
+	}
+	else
+		STRtoSTR(STRnode);
+}
+
+
+void genSTRdecASS(node* STRnode){
+	char buffer[10000] ="";
+	if (!strcmp(STRnode->nodes[0]->token, "=")){
+		if (STRnode->nodes[0]->nodes[0]->nodes[0]->nodes[0]->count > 0)
+			sprintf(buffer,"%s", STRnode->nodes[0]->nodes[0]->nodes[0]->nodes[0]->code);
+		freshVar(STRnode->nodes[0]->nodes[0]->nodes[0]);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", STRnode->nodes[0]->nodes[0]->nodes[0]->var, STRnode->nodes[0]->nodes[0]->var);
+		sprintf(buffer + strlen(buffer),"\t%s -> Sizeof(%s)\n", STRnode->nodes[0]->nodes[0]->nodes[0]->var, STRnode->nodes[0]->nodes[0]->nodes[0]->nodes[0]->var);
+		sprintf(buffer + strlen(buffer),"\t*%s = %s\n", STRnode->nodes[0]->nodes[0]->nodes[0]->var, STRnode->nodes[0]->nodes[1]->var);
+	}
+	else{
+		if (STRnode->nodes[0]->nodes[0]->nodes[0]->count > 0)
+			sprintf(buffer,"%s", STRnode->nodes[0]->nodes[0]->nodes[0]->code);
+		freshVar(STRnode->nodes[0]->nodes[0]);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", STRnode->nodes[0]->nodes[0]->var, STRnode->nodes[0]->var);
+		sprintf(buffer + strlen(buffer),"\t%s -> Sizeof(%s)\n", STRnode->nodes[0]->nodes[0]->var, STRnode->nodes[0]->nodes[0]->nodes[0]->var);
+	}
+	addCode(STRnode, buffer);
+}
+
+
+void genPTR(node* node){
+	char buffer[1000] = "";
+	if (node->nodes[0]->val_type!=NULL && !strcmp(node->nodes[0]->val_type, "ID") && node->nodes[1]->count > 0 && !strcmp(node->nodes[1]->token, "PTR")){
+		freshVar(node->nodes[1]);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->nodes[1]->var, node->nodes[1]->nodes[0]->nodes[0]->var);
+		sprintf(buffer + strlen(buffer),"\t%s = *%s\n", node->nodes[0]->var, node->nodes[1]->var);
+		addCode(node->nodes[0], buffer);
+	}
+
+	else if (node->nodes[1]->val_type!=NULL &&!strcmp(node->nodes[1]->val_type, "ID") && node->nodes[0]->count > 0 && !strcmp(node->nodes[0]->token, "PTR")){
+		freshVar(node->nodes[0]);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->nodes[0]->var, node->nodes[0]->nodes[0]->nodes[0]->var);
+		sprintf(buffer + strlen(buffer),"\t*%s = %s\n", node->nodes[0]->var, node->nodes[1]->var);
+		addCode(node, buffer);
+	}
+
+	else if (node->nodes[0]->val_type!=NULL && !strcmp(node->nodes[0]->val_type, "ID") && node->nodes[1]->count > 0 && !strcmp(node->nodes[1]->token, "&")){
+		freshVar(node->nodes[1]);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->nodes[1]->var, node->nodes[1]->nodes[0]->var);
+		if (!strcmp(node->nodes[1]->nodes[0]->nodes[0]->token, "INDEX")){
+			if (node->nodes[1]->nodes[0]->nodes[0]->nodes[0]->count > 0)
+				sprintf(buffer + strlen(buffer),"%s", node->nodes[1]->nodes[0]->nodes[0]->nodes[0]->code);
+			freshVar(node->nodes[1]->nodes[0]->nodes[0]);
+			sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", node->nodes[1]->nodes[0]->nodes[0]->var, node->nodes[1]->var, node->nodes[1]->nodes[0]->nodes[0]->nodes[0]->var);
+		}
+		freshVar(node);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->var, node->nodes[0]->var);
+		sprintf(buffer + strlen(buffer),"\t%s = %s\n", node->nodes[1]->var, node->var);
+		addCode(node->nodes[0], buffer);
+	}
+
+	else if (!strcmp(node->nodes[0]->token, "PTR") && !strcmp(node->nodes[1]->token, "PTR")){
+		freshVar(node->nodes[1]);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->nodes[1]->var, node->nodes[1]->nodes[0]->nodes[0]->var);
+		freshVar(node->nodes[0]);
+		sprintf(buffer + strlen(buffer),"\t%s = &%s\n", node->nodes[0]->var, node->nodes[0]->nodes[0]->nodes[0]->var);
+		sprintf(buffer + strlen(buffer),"\t*%s = *%s\n", node->nodes[0]->var, node->nodes[1]->var);
+		addCode(node, buffer);
+	}
+}
+
+
+void STRtoSTR(node* STRnode){
+	char buffer[10000] ="";
+	node* temp = mknode("");
+	if (STRnode->nodes[1]->nodes[0]->nodes[0]->count > 0)
+		sprintf(buffer + strlen(buffer),"%s", STRnode->nodes[1]->nodes[0]->nodes[0]->code);
+	freshVar(STRnode->nodes[1]->nodes[0]);
+	sprintf(buffer + strlen(buffer),"\t%s = &%s\n", STRnode->nodes[1]->nodes[0]->var, STRnode->nodes[1]->var);
+	freshVar(STRnode);
+	sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", STRnode->var, STRnode->nodes[1]->nodes[0]->var, STRnode->nodes[1]->nodes[0]->nodes[0]->var);
+
+	if (STRnode->nodes[0]->nodes[0]->nodes[0]->count > 0)
+		sprintf(buffer + strlen(buffer),"%s", STRnode->nodes[0]->nodes[0]->nodes[0]->code);
+	freshVar(STRnode->nodes[0]->nodes[0]);
+	sprintf(buffer + strlen(buffer),"\t%s = &%s\n", STRnode->nodes[0]->nodes[0]->var, STRnode->nodes[0]->var);
+	freshVar(temp);
+	sprintf(buffer + strlen(buffer),"\t%s = %s + %s\n", temp->var, STRnode->nodes[0]->nodes[0]->var, STRnode->nodes[0]->nodes[0]->nodes[0]->var);
+
+	sprintf(buffer + strlen(buffer),"\t*%s = *%s\n", temp->var ,STRnode->var);	
+	addCode(STRnode, buffer);
 }
